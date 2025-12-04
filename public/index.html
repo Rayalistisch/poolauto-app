@@ -270,7 +270,7 @@
       bottom: 0;
       max-width: 480px;
       margin: 0 auto;
-      height: 54px;
+      height: 94px;
       background-color: #ffffff;
       border-top: 1px solid var(--border);
       display: flex;
@@ -295,7 +295,7 @@
     }
 
     .tab-icon {
-      font-size: 18px;
+      font-size: 28px;
     }
 
     .tab-btn.active {
@@ -404,6 +404,20 @@
       font-weight: 600;
       cursor: pointer;
     }
+
+    .booking-delete-btn {
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #9ca3af;
+  margin-left: 6px;
+}
+
+.booking-delete-btn:hover {
+  color: #ef4444;
+}
+
 
     .sheet-button:hover {
       background-color: var(--accent-strong);
@@ -705,40 +719,51 @@
           card.appendChild(empty);
         } else {
           bookings
-            .sort((a, b) => new Date(a.start) - new Date(b.start))
-            .forEach((b) => {
-              const item = document.createElement("div");
-              item.className = "booking-item";
+  .sort((a, b) => new Date(a.start) - new Date(b.start))
+  .forEach((b) => {
+    const item = document.createElement("div");
+    item.className = "booking-item";
 
-              const start = new Date(b.start);
-              const end = new Date(b.end);
-              const timeStr =
-                start.toLocaleTimeString("nl-NL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }) +
-                " – " +
-                end.toLocaleTimeString("nl-NL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+    const start = new Date(b.start);
+    const end = new Date(b.end);
+    const timeStr =
+      start.toLocaleTimeString("nl-NL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }) +
+      " – " +
+      end.toLocaleTimeString("nl-NL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
-              item.innerHTML = `
-                <div class="booking-label">
-                  ${b.userName}${b.note ? " – " + b.note : ""}<br/>
-                  <span style="font-size:11px; color:pink;">
-                    Auto #${b.carId}
-                  </span>
-                </div>
-                <div class="booking-time">${timeStr}</div>
-              `;
+    item.innerHTML = `
+      <div class="booking-label">
+        ${b.userName}${b.note ? " – " + b.note : ""}<br/>
+        <span style="font-size:11px; color:var(--text-muted);">
+          Auto #${b.carId}
+        </span>
+      </div>
+      <div class="booking-time">
+        ${timeStr}
+        <button
+          type="button"
+          class="booking-delete-btn"
+          onclick="deleteBooking(${b.id})"
+          title="Reservering verwijderen"
+        >
+          ×
+        </button>
+      </div>
+    `;
 
-              card.appendChild(item);
+    card.appendChild(item);
 
-              if (isToday && firstTodayBookingText === "Geen ritten") {
-                firstTodayBookingText = timeStr;
-              }
-            });
+    if (isToday && firstTodayBookingText === "Geen ritten") {
+      firstTodayBookingText = timeStr;
+    }
+  });
+
         }
 
         row.appendChild(card);
@@ -857,6 +882,48 @@
       formDateInput.value = isoDate(new Date());
       renderWeek();
     }
+
+    async function deleteBooking(id) {
+  if (!confirm("Weet je zeker dat je deze reservering wilt verwijderen?")) {
+    return;
+  }
+
+  try {
+    const url = API_BASE + "/api/bookings/" + id;
+    console.log("DELETE naar:", url);
+
+    const res = await fetch(url, {
+      method: "DELETE",
+    });
+
+    // Als de server wel antwoordt, maar met een foutcode (404/500/etc)
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Serverfout bij DELETE:", res.status, text);
+
+      let message = "Verwijderen is niet gelukt.";
+      try {
+        const data = JSON.parse(text);
+        if (data.error) message = data.error;
+      } catch (_) {
+        // text was geen JSON, laat gewoon status zien
+        message = `Serverfout (${res.status}): ${text}`;
+      }
+
+      alert(message);
+      return;
+    }
+
+    // Succes
+    console.log("Reservering verwijderd:", id);
+    await renderWeek();
+  } catch (err) {
+    console.error("Netwerkfout bij verwijderen:", err);
+    alert("Netwerkfout bij verwijderen: " + (err.message || err));
+  }
+}
+
+
 
     init();
   </script>
