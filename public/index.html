@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poolauto planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --accent: #3b82f6;
+      --accent-soft: #e0f2fe;
+      --accent-strong: #2563eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* HEADER */
+
+    .header-gradient {
+      padding: 16px 20px 12px;
+      background: linear-gradient(135deg, #22c55e, #10b981, #3b82f6);
+      color: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left-title {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .header-left-date {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .header-chip {
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .header-chip-icon {
+      font-size: 16px;
+    }
+
+    /* WEEK BAR */
+
+    .week-bar {
+      background-color: #f9fafb;
+      padding: 10px 16px 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .week-info-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .week-info-range {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .week-nav-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .week-nav-buttons button {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background-color: #ffffff;
+      font-size: 11px;
+      padding: 6px 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .week-nav-buttons button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    /* CONTENT */
+
+    .content {
+      flex: 1;
+      padding: 8px 12px 70px; /* ruimte voor bottom nav */
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 4px 4px 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* DAY LIST */
+
+    .day-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .day-date-column {
+      width: 50px;
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      padding-top: 6px;
+    }
+
+    .day-date-number {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .day-date-month {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .day-card {
+      flex: 1;
+      margin-left: 8px;
+      border-radius: 14px;
+      background-color: var(--card);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .day-card.highlight {
+      background-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .day-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .day-card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .day-card.highlight .day-card-sub {
+      color: #dbeafe;
+    }
+
+    .booking-item {
+      margin-top: 4px;
+      padding: 8px 9px;
+      border-radius: 10px;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .day-card.highlight .booking-item {
+      background-color: rgba(15, 23, 42, 0.25);
+      color: #e5e7eb;
+    }
+
+    .booking-label {
+      flex: 1;
+      margin-right: 6px;
+    }
+
+    .booking-time {
+      font-weight: 500;
+      font-size: 12px;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .booking-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .day-card.highlight .booking-empty {
+      color: #e5e7eb;
+    }
+
+    /* SEARCH SECTION */
+
+    .search-box {
+      background-color: #ffffff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+
+    /* BOTTOM NAV */
+
+    .tab-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      height: 54px;
+      background-color: #ffffff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .tab-btn {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      gap: 2px;
+    }
+
+    .tab-icon {
+      font-size: 18px;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-strong);
+    }
+
+    .tab-btn-add .add-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background-color: var(--accent-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
+      margin-bottom: 2px;
+    }
+
+    /* BOTTOM SHEET */
+
+    .bottom-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.25);
+      padding: 10px 14px 12px;
+      transform: translateY(100%);
+      transition: transform 0.2s ease-out;
+      z-index: 30;
+    }
+
+    .bottom-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .sheet-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sheet-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sheet-close {
+      border: none;
+      background: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 6px;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .sheet-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sheet-row > div {
+      flex: 1;
+    }
+
+    .sheet-button {
+      margin-top: 4px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: none;
+      background-color: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sheet-button:hover {
+      background-color: var(--accent-strong);
+    }
+
+    .message {
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .message.success {
+      color: var(--success);
+    }
+
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      z-index: 25;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .sheet-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (min-width: 700px) {
+      .app {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- HEADER -->
+    <header class="header-gradient">
+      <div>
+        <div class="header-left-title">Today</div>
+        <div class="header-left-date" id="headerDateText"></div>
+      </div>
+      <div class="header-chip">
+        <span class="header-chip-icon">🚗</span>
+        <span class="header-chip-text" id="headerChipText">Geen ritten</span>
+      </div>
+    </header>
+
+    <!-- WEEK BAR -->
+    <section class="week-bar">
+      <div>
+        <div class="week-info-title">Poolauto's</div>
+        <div class="week-info-range" id="weekTitle"></div>
+      </div>
+      <div class="week-nav-buttons">
+        <button id="prevWeekBtn" type="button">←</button>
+        <button id="todayWeekBtn" type="button">Vandaag</button>
+        <button id="nextWeekBtn" type="button">→</button>
+      </div>
+    </section>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <!-- Overzicht -->
+      <section id="overviewSection">
+        <div class="section-title">
+          Overzicht van alle poolauto-reserveringen per dag.
+        </div>
+        <div id="daysContainer"></div>
+      </section>
+
+      <!-- Zoeken (placeholder) -->
+      <section id="searchSection" class="hidden">
+        <div class="section-title">Zoeken</div>
+        <div class="search-box">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Zoek op naam (functie later invullen)"
+          />
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); padding:0 4px;">
+          Hier kun je later zoeken op naam van medewerker of cliënt over alle reserveringen.
+        </p>
+      </section>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="tab-bar">
+      <button id="tabOverview" class="tab-btn active" type="button">
+        <span class="tab-icon">🏠</span>
+        <span>Overzicht</span>
+      </button>
+      <button id="tabSearch" class="tab-btn" type="button">
+        <span class="tab-icon">🔍</span>
+        <span>Zoeken</span>
+      </button>
+      <button id="tabAdd" class="tab-btn tab-btn-add" type="button">
+        <div class="add-circle">
+          <span style="font-size:20px;">＋</span>
+        </div>
+        <span>Nieuw</span>
+      </button>
+    </nav>
+
+    <!-- SHEET OVERLAY -->
+    <div id="sheetOverlay" class="sheet-overlay"></div>
+
+    <!-- BOTTOM SHEET: NIEUWE RESERVERING -->
+    <section id="bottomSheet" class="bottom-sheet">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">Nieuwe reservering</div>
+          <div class="sheet-sub">
+            Er wordt automatisch een beschikbare poolauto toegewezen.
+          </div>
+        </div>
+        <button id="sheetCloseBtn" class="sheet-close" type="button">×</button>
+      </div>
+
+      <div id="message"></div>
+
+      <form id="bookingForm">
+        <label for="userName">Naam</label>
+        <input id="userName" type="text" placeholder="Bijv. Ray" required />
+
+        <label for="formDate">Datum</label>
+        <input id="formDate" type="date" required />
+
+        <div class="sheet-row">
+          <div>
+            <label for="startTime">Start</label>
+            <input id="startTime" type="time" required />
+          </div>
+          <div>
+            <label for="endTime">Einde</label>
+            <input id="endTime" type="time" required />
+          </div>
+        </div>
+
+        <label for="note">Opmerking (optioneel)</label>
+        <textarea id="note" rows="1" placeholder="Bijv. bezoek cliënt X"></textarea>
+
+        <button class="sheet-button" type="submit">Reservering opslaan</button>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE = "";
+
+    const daysContainer = document.getElementById("daysContainer");
+    const weekTitle = document.getElementById("weekTitle");
+    const headerDateText = document.getElementById("headerDateText");
+    const headerChipText = document.getElementById("headerChipText");
+
+    const prevWeekBtn = document.getElementById("prevWeekBtn");
+    const nextWeekBtn = document.getElementById("nextWeekBtn");
+    const todayWeekBtn = document.getElementById("todayWeekBtn");
+
+    const overviewSection = document.getElementById("overviewSection");
+    const searchSection = document.getElementById("searchSection");
+    const tabOverview = document.getElementById("tabOverview");
+    const tabSearch = document.getElementById("tabSearch");
+    const tabAdd = document.getElementById("tabAdd");
+
+    const bottomSheet = document.getElementById("bottomSheet");
+    const sheetOverlay = document.getElementById("sheetOverlay");
+    const sheetCloseBtn = document.getElementById("sheetCloseBtn");
+
+    const bookingForm = document.getElementById("bookingForm");
+    const userNameInput = document.getElementById("userName");
+    const formDateInput = document.getElementById("formDate");
+    const startTimeInput = document.getElementById("startTime");
+    const endTimeInput = document.getElementById("endTime");
+    const noteInput = document.getElementById("note");
+    const messageDiv = document.getElementById("message");
+
+    let currentWeekAnchor = new Date();
+
+    function isoDate(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function startOfWeek(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = (day + 6) % 7;
+      d.setDate(d.getDate() - diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
+    function formatNLDate(date) {
+      return date.toLocaleDateString("nl-NL", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+      });
+    }
+
+    function showMessage(text, type) {
+      if (!text) {
+        messageDiv.innerHTML = "";
+        return;
+      }
+      messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+    }
+
+    function updateHeaderToday() {
+      const now = new Date();
+      headerDateText.textContent = formatNLDate(now);
+    }
+
+    async function fetchBookingsForDate(dateStr) {
+      const params = new URLSearchParams();
+      params.append("date", dateStr);
+      const res = await fetch(API_BASE + "/api/bookings?" + params.toString());
+      return await res.json();
+    }
+
+    async function renderWeek() {
+      const monday = startOfWeek(currentWeekAnchor);
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        days.push(addDays(monday, i));
+      }
+
+      const weekStartStr = days[0].toLocaleDateString("nl-NL", {
+        day: "2-digit",
+        month: "short",
+      });
+      const weekEndStr = days[6].toLocaleDateString("nl-NL", {
+        day: "2-digit",
+        month: "short",
+      });
+      weekTitle.textContent = `Week ${weekStartStr} – ${weekEndStr}`;
+
+      const promises = days.map((d) => fetchBookingsForDate(isoDate(d)));
+      const resultSets = await Promise.all(promises);
+
+      daysContainer.innerHTML = "";
+
+      const todayISO = isoDate(new Date());
+      let firstTodayBookingText = "Geen ritten";
+
+      days.forEach((date, idx) => {
+        const bookings = resultSets[idx] || [];
+        const isToday = isoDate(date) === todayISO;
+
+        const row = document.createElement("div");
+        row.className = "day-row";
+
+        const dateCol = document.createElement("div");
+        dateCol.className = "day-date-column";
+        dateCol.innerHTML = `
+          <div class="day-date-number">${date.getDate()}</div>
+          <div class="day-date-month">${date.toLocaleDateString("nl-NL", {
+            month: "short",
+          })}</div>
+        `;
+        row.appendChild(dateCol);
+
+        const card = document.createElement("div");
+        card.className = "day-card" + (isToday ? " highlight" : "");
+
+        const dayName = date.toLocaleDateString("nl-NL", { weekday: "long" });
+
+        const header = document.createElement("div");
+        header.className = "day-card-header";
+        header.innerHTML = `
+          <div class="day-card-title">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</div>
+          <div class="day-card-sub">${
+            bookings.length ? bookings.length + " reservering(en)" : "Nog geen reserveringen"
+          }</div>
+        `;
+        card.appendChild(header);
+
+        if (!bookings.length) {
+          const empty = document.createElement("div");
+          empty.className = "booking-empty";
+          empty.textContent = "Nog geen rit voor deze dag.";
+          card.appendChild(empty);
+        } else {
+          bookings
+            .sort((a, b) => new Date(a.start) - new Date(b.start))
+            .forEach((b) => {
+              const item = document.createElement("div");
+              item.className = "booking-item";
+
+              const start = new Date(b.start);
+              const end = new Date(b.end);
+              const timeStr =
+                start.toLocaleTimeString("nl-NL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) +
+                " – " +
+                end.toLocaleTimeString("nl-NL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+              item.innerHTML = `
+                <div class="booking-label">
+                  ${b.userName}${b.note ? " – " + b.note : ""}<br/>
+                  <span style="font-size:11px; color:white;">
+                    Auto #${b.carId}
+                  </span>
+                </div>
+                <div class="booking-time">${timeStr}</div>
+              `;
+
+              card.appendChild(item);
+
+              if (isToday && firstTodayBookingText === "Geen ritten") {
+                firstTodayBookingText = timeStr;
+              }
+            });
+        }
+
+        row.appendChild(card);
+        daysContainer.appendChild(row);
+      });
+
+      headerChipText.textContent = firstTodayBookingText;
+    }
+
+    // WEEK NAVIGATIE
+    prevWeekBtn.addEventListener("click", () => {
+      currentWeekAnchor = addDays(currentWeekAnchor, -7);
+      renderWeek();
+    });
+
+    nextWeekBtn.addEventListener("click", () => {
+      currentWeekAnchor = addDays(currentWeekAnchor, 7);
+      renderWeek();
+    });
+
+    todayWeekBtn.addEventListener("click", () => {
+      currentWeekAnchor = new Date();
+      renderWeek();
+    });
+
+    // BOTTOM SHEET
+    function openSheet() {
+      bottomSheet.classList.add("open");
+      sheetOverlay.classList.add("visible");
+    }
+
+    function closeSheet() {
+      bottomSheet.classList.remove("open");
+      sheetOverlay.classList.remove("visible");
+      showMessage("", "");
+    }
+
+    tabAdd.addEventListener("click", () => {
+      formDateInput.value = isoDate(new Date());
+      openSheet();
+    });
+
+    sheetCloseBtn.addEventListener("click", closeSheet);
+    sheetOverlay.addEventListener("click", closeSheet);
+
+    // TAB SWITCH
+    function setActiveTab(tab) {
+      if (tab === "overview") {
+        overviewSection.classList.remove("hidden");
+        searchSection.classList.add("hidden");
+        tabOverview.classList.add("active");
+        tabSearch.classList.remove("active");
+      } else {
+        overviewSection.classList.add("hidden");
+        searchSection.classList.remove("hidden");
+        tabOverview.classList.remove("active");
+        tabSearch.classList.add("active");
+      }
+    }
+
+    tabOverview.addEventListener("click", () => setActiveTab("overview"));
+    tabSearch.addEventListener("click", () => setActiveTab("search"));
+
+    // FORM SUBMIT
+    bookingForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showMessage("", "");
+
+      const userName = userNameInput.value.trim();
+      const date = formDateInput.value;
+      const startTime = startTimeInput.value;
+      const endTime = endTimeInput.value;
+      const note = noteInput.value.trim();
+
+      if (!date || !startTime || !endTime || !userName) {
+        showMessage("Vul alle verplichte velden in.", "error");
+        return;
+      }
+
+      const start = new Date(date + "T" + startTime);
+      const end = new Date(date + "T" + endTime);
+
+      const payload = {
+        userName,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        note,
+      };
+
+      try {
+        const res = await fetch(API_BASE + "/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMessage(data.error || "Er ging iets mis.", "error");
+        } else {
+          showMessage("Reservering opgeslagen ✔️", "success");
+          localStorage.setItem("poolauto_userName", userName);
+          await renderWeek();
+          setTimeout(closeSheet, 500);
+        }
+      } catch (err) {
+        showMessage("Netwerkfout.", "error");
+      }
+    });
+
+    function init() {
+      updateHeaderToday();
+      const savedName = localStorage.getItem("poolauto_userName");
+      if (savedName) userNameInput.value = savedName;
+      formDateInput.value = isoDate(new Date());
+      renderWeek();
+    }
+
+    init();
+  </script>
+</body>
+</html>
