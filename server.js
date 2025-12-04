@@ -128,6 +128,20 @@ app.post("/api/bookings", (req, res) => {
   res.status(201).json(newBooking);
 });
 
+app.delete("/api/bookings/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  const index = bookings.findIndex((b) => b.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Reservering niet gevonden" });
+  }
+
+  const deleted = bookings.splice(index, 1)[0];
+  saveBookings();
+
+  res.json({ success: true, deleted });
+});
+
 // ---- START SERVER ----
 app.listen(PORT, () => {
   console.log(`✅ Poolauto app draait op http://localhost:${PORT}`);
