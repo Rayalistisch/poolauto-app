@@ -48,9 +48,11 @@ loadAccounts();
 
 // ---- POOLAUTO'S ----
 const cars = [
-  { id: 1, name: "Poolauto 1", license: "AA-123-B" },
-  { id: 2, name: "Poolauto 2", license: "BB-456-C" },
-  { id: 3, name: "Poolauto 3", license: "CC-789-D" },
+  { id: 1, name: "Toyota Aygo", license: "S-551-FT" },
+  { id: 2, name: "Peugeot 107", license: "Z-365-HK" },
+  { id: 3, name: "Citroën C1", license: "39-RGG-5" },
+  { id: 4, name: "Citroën C1", license: "X-728-DH" },
+  { id: 5, name: "MB Bus", license: "V-840-NP" },
 ];
 
 // Alle auto's (zonder beschikbaarheid)
