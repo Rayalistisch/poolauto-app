@@ -50,7 +50,51 @@ loadAccounts();
 const cars = [
   { id: 1, name: "Poolauto 1", license: "AA-123-B" },
   { id: 2, name: "Poolauto 2", license: "BB-456-C" },
+  { id: 3, name: "Poolauto 3", license: "CC-789-D" },
 ];
+
+// Alle auto's (zonder beschikbaarheid)
+app.get("/api/cars", (req, res) => {
+  res.json(cars);
+});
+
+// Beschikbaarheid per auto voor een periode
+app.get("/api/cars/availability", (req, res) => {
+  const { start, end, orgId } = req.query;
+
+  if (!orgId) {
+    return res.status(400).json({ error: "orgId is verplicht" });
+  }
+
+  const orgIdNum = Number(orgId);
+  const orgBookings = bookings.filter((b) => b.orgId === orgIdNum);
+
+  // Als start/eind nog niet bekend zijn → geen echte check, gewoon alles beschikbaar
+  if (!start || !end) {
+    const result = cars.map((car) => ({
+      ...car,
+      available: true,
+    }));
+    return res.json(result);
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const result = cars.map((car) => {
+    const conflict = orgBookings.some((b) => {
+      if (b.carId !== car.id) return false;
+      return isOverlap(startDate, endDate, new Date(b.start), new Date(b.end));
+    });
+
+    return {
+      ...car,
+      available: !conflict,
+    };
+  });
+
+  res.json(result);
+});
 
 // ---- BOOKINGS DATA ----
 let bookings = [];
@@ -95,25 +139,6 @@ function isOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
 }
 
-function findAvailableCar(startDate, endDate, orgId) {
-  // Voor nu delen alle organisaties dezelfde auto's.
-  // Wil je per organisatie eigen auto's, dan filter je hier ook op orgId.
-  for (const car of cars) {
-    const conflict = bookings.some((b) => {
-      if (b.carId !== car.id) return false;
-      if (b.orgId !== orgId) return false;
-      return isOverlap(
-        startDate,
-        endDate,
-        new Date(b.start),
-        new Date(b.end)
-      );
-    });
-    if (!conflict) return car;
-  }
-  return null;
-}
-
 // ---- API ROUTES ----
 
 // Inloggen met organisatiecode
@@ -156,22 +181,30 @@ app.get("/api/bookings", (req, res) => {
   res.json(result);
 });
 
-// Nieuwe booking (automatische auto-toewijzing, per org)
+// Nieuwe booking (gebruiker kiest zelf auto)
 app.post("/api/bookings", (req, res) => {
-  const { userName, start, end, note, orgId } = req.body;
+  const { userName, start, end, note, orgId, carId } = req.body;
 
   if (!orgId) {
-    return res.status(400).json({
-      error: "orgId is verplicht",
-    });
+    return res.status(400).json({ error: "orgId is verplicht" });
   }
-
-  const orgIdNum = Number(orgId);
-
   if (!userName || !start || !end) {
     return res.status(400).json({
       error: "userName, start en end zijn verplicht",
     });
+  }
+  if (!carId) {
+    return res.status(400).json({
+      error: "carId is verplicht",
+    });
+  }
+
+  const orgIdNum = Number(orgId);
+  const carIdNum = Number(carId);
+
+  const car = cars.find((c) => c.id === carIdNum);
+  if (!car) {
+    return res.status(400).json({ error: "Onbekende auto" });
   }
 
   const startDate = new Date(start);
@@ -183,22 +216,27 @@ app.post("/api/bookings", (req, res) => {
     });
   }
 
-  const availableCar = findAvailableCar(startDate, endDate, orgIdNum);
+  // check overlap voor deze auto binnen deze organisatie
+  const conflict = bookings.some((b) => {
+    if (b.orgId !== orgIdNum) return false;
+    if (b.carId !== carIdNum) return false;
+    return isOverlap(startDate, endDate, new Date(b.start), new Date(b.end));
+  });
 
-  if (!availableCar) {
+  if (conflict) {
     return res.status(409).json({
-      error: "Geen poolauto beschikbaar in deze periode",
+      error: "Deze auto is in deze periode al geboekt.",
     });
   }
 
   const newBooking = {
     id: nextBookingId++,
-    carId: availableCar.id,
+    orgId: orgIdNum,
+    carId: carIdNum,
     userName,
     start: startDate.toISOString(),
     end: endDate.toISOString(),
     note: note || "",
-    orgId: orgIdNum,
   };
 
   bookings.push(newBooking);
@@ -207,7 +245,7 @@ app.post("/api/bookings", (req, res) => {
   res.status(201).json(newBooking);
 });
 
-// Reservering verwijderen (optioneel: orgId checken)
+// Reservering verwijderen
 app.delete("/api/bookings/:id", (req, res) => {
   const id = Number(req.params.id);
 
