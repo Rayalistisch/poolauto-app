@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "name": "Demo organisatie",
+    "code": "demo123"
+  },
+  {
+    "id": 2,
+    "name": "Team Zorggroep X",
+    "code": "zorgx2025"
+  }
+]
