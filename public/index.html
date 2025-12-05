@@ -485,6 +485,44 @@
       border-color: var(--accent);
     }
 
+    .logout-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.logout-btn::before {
+  content: "⎋";
+  font-size: 13px;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
+.logout-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+}
+
+
     .sheet-row {
       display: flex;
       gap: 8px;
@@ -573,9 +611,6 @@
           <button class="login-button" type="submit">Inloggen</button>
           <div id="loginMessage" class="login-message"></div>
         </form>
-        <div class="login-org-hint">
-          Elke organisatie heeft een eigen code (vastgelegd in <code>accounts.json</code>).
-        </div>
       </div>
     </section>
 
@@ -583,16 +618,22 @@
     <div id="mainApp" class="hidden">
       <!-- HEADER -->
       <header class="header-gradient">
-        <div>
-          <div class="header-left-title">Vandaag</div>
-          <div class="header-left-date" id="headerDateText"></div>
-          <div class="header-left-org" id="headerOrgName"></div>
-        </div>
-        <div class="header-chip">
-          <span class="header-chip-icon">🚗</span>
-          <span class="header-chip-text" id="headerChipText">Geen ritten</span>
-        </div>
-      </header>
+  <div>
+    <div class="header-left-title">Vandaag</div>
+    <div class="header-left-date" id="headerDateText"></div>
+    <div class="header-left-org" id="headerOrgName"></div>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:8px;">
+    <div class="header-chip">
+      <span class="header-chip-icon">🚗</span>
+      <span class="header-chip-text" id="headerChipText">Geen ritten</span>
+    </div>
+    <button id="logoutBtn" class="logout-btn" type="button">
+      Uitloggen
+    </button>
+  </div>
+</header>
 
       <!-- WEEK BAR -->
       <section class="week-bar">
@@ -628,7 +669,8 @@
             />
           </div>
           <p style="font-size:12px; color:var(--text-muted); padding:0 4px;">
-            Hier kun je later zoeken op naam van medewerker of cliënt over alle reserveringen.
+            Hier kun je later zoeken op naam van medewerker of cliënt over alle
+            reserveringen.
           </p>
         </section>
       </main>
@@ -687,7 +729,11 @@
           </div>
 
           <label for="note">Opmerking (optioneel)</label>
-          <textarea id="note" rows="1" placeholder="Bijv. bezoek cliënt X"></textarea>
+          <textarea
+            id="note"
+            rows="1"
+            placeholder="Bijv. bezoek cliënt X"
+          ></textarea>
 
           <button class="sheet-button" type="submit">Reservering opslaan</button>
         </form>
@@ -696,7 +742,7 @@
   </div>
 
   <script>
-    const API_BASE = "https://poolauto-app.onrender.com";
+    const API_BASE = ""; // werkt op localhost én op Render (zelfde origin)
 
     // --- ORG STATE ---
     let currentOrgId = localStorage.getItem("poolauto_orgId");
@@ -715,6 +761,7 @@
     const headerDateText = document.getElementById("headerDateText");
     const headerChipText = document.getElementById("headerChipText");
     const headerOrgNameEl = document.getElementById("headerOrgName");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     const prevWeekBtn = document.getElementById("prevWeekBtn");
     const nextWeekBtn = document.getElementById("nextWeekBtn");
@@ -745,7 +792,7 @@
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+      return `${year}-${month}-${day}`; // lokaal, geen UTC-shift
     }
 
     function startOfWeek(date) {
@@ -975,6 +1022,8 @@
 
     tabOverview.addEventListener("click", () => setActiveTab("overview"));
     tabSearch.addEventListener("click", () => setActiveTab("search"));
+    logoutBtn.addEventListener("click", logout);
+
 
     // FORM SUBMIT NIEUWE RESERVERING
     bookingForm.addEventListener("submit", async (e) => {
@@ -1030,6 +1079,24 @@
       }
     });
 
+    function logout() {
+  // alles van deze organisatie vergeten
+  currentOrgId = null;
+  currentOrgName = null;
+
+  localStorage.removeItem("poolauto_orgId");
+  localStorage.removeItem("poolauto_orgName");
+
+  // UI leegmaken
+  headerOrgNameEl.textContent = "";
+  headerChipText.textContent = "Geen ritten";
+  daysContainer.innerHTML = "";
+  weekTitle.textContent = "";
+
+  // terug naar login
+  showLogin();
+}
+
     // DELETE BOOKING
     async function deleteBooking(id) {
       if (!confirm("Weet je zeker dat je deze reservering wilt verwijderen?")) {
@@ -1063,15 +1130,21 @@
     window.deleteBooking = deleteBooking;
 
     // --- LOGIN LOGICA ---
-    function showLogin() {
-      loginScreen.classList.remove("hidden");
-      mainApp.classList.add("hidden");
-    }
+function showLogin() {
+  // login laten zien, app verbergen
+  loginScreen.style.display = "block";
+  mainApp.style.display = "none";
+  loginScreen.classList.remove("hidden");
+  mainApp.classList.add("hidden");
+}
 
-    function showMainApp() {
-      loginScreen.classList.add("hidden");
-      mainApp.classList.remove("hidden");
-    }
+function showMainApp() {
+  // login verbergen, app laten zien
+  loginScreen.style.display = "none";
+  mainApp.style.display = "block";
+  loginScreen.classList.add("hidden");
+  mainApp.classList.remove("hidden");
+}
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
