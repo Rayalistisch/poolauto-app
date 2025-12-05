@@ -1,11 +1,27 @@
 // server.js
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// --- SUPABASE CLIENT ---
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || "";
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.warn(
+    "⚠️ SUPABASE_URL en/of SUPABASE_[ANON/SERVICE_ROLE]_KEY ontbreken. Zet deze in .env / Render env vars."
+  );
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- MIDDLEWARE & STATIC ---
 app.use(cors());
@@ -16,11 +32,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---- BESTANDEN ----
-const DATA_FILE = path.join(__dirname, "bookings.json");
+// ---- ACCOUNTS (nog steeds lokaal uit JSON) ----
 const ACCOUNTS_FILE = path.join(__dirname, "accounts.json");
-
-// ---- ACCOUNTS ----
 let accounts = [];
 
 function loadAccounts() {
@@ -39,14 +52,17 @@ function loadAccounts() {
       accounts = [];
     }
   } catch (err) {
-    console.error("⚠️ Kon accounts.json niet lezen, gebruik lege lijst:", err.message);
+    console.error(
+      "⚠️ Kon accounts.json niet lezen, gebruik lege lijst:",
+      err.message
+    );
     accounts = [];
   }
 }
 
 loadAccounts();
 
-// ---- POOLAUTO'S ----
+// ---- POOLAUTO'S (nog steeds hardcoded) ----
 const cars = [
   { id: 1, name: "Toyota Aygo", license: "S-551-FT" },
   { id: 2, name: "Peugeot 107", license: "Z-365-HK" },
@@ -55,95 +71,14 @@ const cars = [
   { id: 5, name: "MB Bus", license: "V-840-NP" },
 ];
 
-// Alle auto's (zonder beschikbaarheid)
-app.get("/api/cars", (req, res) => {
-  res.json(cars);
-});
-
-// Beschikbaarheid per auto voor een periode
-app.get("/api/cars/availability", (req, res) => {
-  const { start, end, orgId } = req.query;
-
-  if (!orgId) {
-    return res.status(400).json({ error: "orgId is verplicht" });
-  }
-
-  const orgIdNum = Number(orgId);
-  const orgBookings = bookings.filter((b) => b.orgId === orgIdNum);
-
-  // Als start/eind nog niet bekend zijn → geen echte check, gewoon alles beschikbaar
-  if (!start || !end) {
-    const result = cars.map((car) => ({
-      ...car,
-      available: true,
-    }));
-    return res.json(result);
-  }
-
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-
-  const result = cars.map((car) => {
-    const conflict = orgBookings.some((b) => {
-      if (b.carId !== car.id) return false;
-      return isOverlap(startDate, endDate, new Date(b.start), new Date(b.end));
-    });
-
-    return {
-      ...car,
-      available: !conflict,
-    };
-  });
-
-  res.json(result);
-});
-
-// ---- BOOKINGS DATA ----
-let bookings = [];
-let nextBookingId = 1;
-
-function loadBookings() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) {
-      bookings = [];
-      return;
-    }
-
-    const raw = fs.readFileSync(DATA_FILE, "utf-8").trim();
-    if (!raw) {
-      bookings = [];
-      return;
-    }
-
-    bookings = JSON.parse(raw);
-    if (!Array.isArray(bookings)) {
-      bookings = [];
-    }
-
-    if (bookings.length > 0) {
-      nextBookingId = Math.max(...bookings.map((b) => Number(b.id) || 0)) + 1;
-    }
-  } catch (err) {
-    console.error("⚠️ Kon bookings.json niet lezen, reset naar leeg:", err.message);
-    bookings = [];
-  }
-}
-
-function saveBookings() {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(bookings, null, 2));
-}
-
-// Bij server-start laden
-loadBookings();
-
-// ---- HELPERS ----
+// Helper overlap
 function isOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
 }
 
 // ---- API ROUTES ----
 
-// Inloggen met organisatiecode
+// Inloggen met organisatiecode (nog steeds via accounts.json)
 app.post("/api/login", (req, res) => {
   const { code } = req.body;
   if (!code) {
@@ -158,15 +93,75 @@ app.post("/api/login", (req, res) => {
     return res.status(401).json({ error: "Onbekende code" });
   }
 
-  // Echte SaaS zou hier een token maken; nu volstaat orgId + name.
   res.json({
     orgId: account.id,
     name: account.name,
   });
 });
 
+// Alle auto's (zonder beschikbaarheid)
+app.get("/api/cars", (req, res) => {
+  res.json(cars);
+});
+
+// Beschikbaarheid per auto op basis van Supabase bookings
+app.get("/api/cars/availability", async (req, res) => {
+  const { start, end, orgId } = req.query;
+
+  if (!start || !end || !orgId) {
+    return res
+      .status(400)
+      .json({ error: "start, end en orgId zijn verplicht" });
+  }
+
+  const orgIdNum = Number(orgId);
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  try {
+    // Haal alle bookings voor deze org op
+    const { data: orgBookings, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("org_id", orgIdNum); // ✅ DB-kolom is org_id
+
+    if (error) {
+      console.error("Supabase fout /api/cars/availability:", error);
+      return res
+        .status(500)
+        .json({ error: "Kon reserveringen niet ophalen." });
+    }
+
+    const result = cars.map((car) => {
+      const conflict = (orgBookings || []).some((b) => {
+        // ✅ DB-kolom is car_id
+        if (b.car_id !== car.id) return false;
+
+        // Ga er vanuit dat kolommen 'start' en 'end' heten in de DB
+        return isOverlap(
+          startDate,
+          endDate,
+          new Date(b.start),
+          new Date(b.end)
+        );
+      });
+
+      return {
+        ...car,
+        available: !conflict,
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("Serverfout /api/cars/availability:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+
 // Alle bookings (gefilterd op org + optioneel datum)
-app.get("/api/bookings", (req, res) => {
+app.get("/api/bookings", async (req, res) => {
   const { date, orgId } = req.query;
 
   if (!orgId) {
@@ -174,17 +169,56 @@ app.get("/api/bookings", (req, res) => {
   }
 
   const orgIdNum = Number(orgId);
-  let result = bookings.filter((b) => b.orgId === orgIdNum);
 
-  if (date) {
-    result = result.filter((b) => b.start.slice(0, 10) === date);
+  try {
+    let query = supabase
+      .from("bookings")
+      .select("*")
+      .eq("org_id", orgIdNum)
+      .order("start", { ascending: true });
+
+    if (date) {
+      // Filter op dag in UTC
+      const dayStart = new Date(date + "T00:00:00.000Z");
+      const dayEnd = new Date(date + "T23:59:59.999Z");
+
+      query = query
+        .gte("start", dayStart.toISOString())
+        .lt("start", dayEnd.toISOString());
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Supabase fout GET /api/bookings:", error);
+      return res
+        .status(500)
+        .json({ error: "Kon reserveringen niet ophalen." });
+    }
+
+    // ✅ Map snake_case (DB) → camelCase/front-end verwachte keys
+    const normalized = (data || []).map((b) => ({
+      id: b.id,
+      orgId: b.org_id,
+      carId: b.car_id,
+      userName: b.user_name,
+      start: b.start,
+      end: b.end,
+      note: b.note,
+    }));
+
+    res.json(normalized);
+  } catch (err) {
+    console.error("Serverfout GET /api/bookings:", err);
+    res.status(500).json({ error: "Interne serverfout." });
   }
-
-  res.json(result);
 });
 
-// Nieuwe booking (gebruiker kiest zelf auto)
-app.post("/api/bookings", (req, res) => {
+
+
+// Nieuwe booking (via Supabase, met gekozen auto)
+// Nieuwe booking (via Supabase, met gekozen auto)
+app.post("/api/bookings", async (req, res) => {
   const { userName, start, end, note, orgId, carId } = req.body;
 
   if (!orgId) {
@@ -218,48 +252,99 @@ app.post("/api/bookings", (req, res) => {
     });
   }
 
-  // check overlap voor deze auto binnen deze organisatie
-  const conflict = bookings.some((b) => {
-    if (b.orgId !== orgIdNum) return false;
-    if (b.carId !== carIdNum) return false;
-    return isOverlap(startDate, endDate, new Date(b.start), new Date(b.end));
-  });
+  try {
+    // Check overlap voor deze auto binnen deze org
+    const { data: overlapping, error: overlapErr } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("org_id", orgIdNum)
+      .eq("car_id", carIdNum)
+      .lt("start", endDate.toISOString())
+      .gt("end", startDate.toISOString());
 
-  if (conflict) {
-    return res.status(409).json({
-      error: "Deze auto is in deze periode al geboekt.",
-    });
+    if (overlapErr) {
+      console.error("Supabase fout overlap-check:", overlapErr);
+      return res
+        .status(500)
+        .json({ error: "Kon beschikbaarheid niet controleren." });
+    }
+
+    if (overlapping && overlapping.length > 0) {
+      return res.status(409).json({
+        error: "Deze auto is in deze periode al geboekt.",
+      });
+    }
+
+    const insertPayload = {
+      org_id: orgIdNum,
+      car_id: carIdNum,
+      user_name: userName,
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+      note: note || "",
+    };
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .insert([insertPayload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase fout INSERT /api/bookings:", error);
+      return res
+        .status(500)
+        .json({ error: "Kon reservering niet opslaan." });
+    }
+
+    // ✅ Zelfde normalized shape als GET
+    const normalized = {
+      id: data.id,
+      orgId: data.org_id,
+      carId: data.car_id,
+      userName: data.user_name,
+      start: data.start,
+      end: data.end,
+      note: data.note,
+    };
+
+    res.status(201).json(normalized);
+  } catch (err) {
+    console.error("Serverfout POST /api/bookings:", err);
+    res.status(500).json({ error: "Interne serverfout." });
   }
-
-  const newBooking = {
-    id: nextBookingId++,
-    orgId: orgIdNum,
-    carId: carIdNum,
-    userName,
-    start: startDate.toISOString(),
-    end: endDate.toISOString(),
-    note: note || "",
-  };
-
-  bookings.push(newBooking);
-  saveBookings();
-
-  res.status(201).json(newBooking);
 });
 
+
+
 // Reservering verwijderen
-app.delete("/api/bookings/:id", (req, res) => {
+app.delete("/api/bookings/:id", async (req, res) => {
   const id = Number(req.params.id);
 
-  const index = bookings.findIndex((b) => b.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: "Reservering niet gevonden" });
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase fout DELETE /api/bookings/:id:", error);
+      return res
+        .status(500)
+        .json({ error: "Kon reservering niet verwijderen." });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Reservering niet gevonden" });
+    }
+
+    res.json({ success: true, deleted: data });
+  } catch (err) {
+    console.error("Serverfout DELETE /api/bookings/:id:", err);
+    res.status(500).json({ error: "Interne serverfout." });
   }
-
-  const deleted = bookings.splice(index, 1)[0];
-  saveBookings();
-
-  res.json({ success: true, deleted });
 });
 
 // ---- START SERVER ----
