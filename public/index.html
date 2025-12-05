@@ -723,7 +723,7 @@
             id="orgCodeInput"
             class="login-input"
             type="text"
-            placeholder="Bijv. demo123"
+            placeholder="Bijv. actifaid123"
             autocomplete="off"
           />
           <button class="login-button" type="submit">Inloggen</button>
@@ -1344,6 +1344,26 @@
     tabSearch.classList.toggle("active", tab === "search");
   }
 
+  // WEEK NAVIGATIE
+prevWeekBtn.addEventListener("click", () => {
+  if (!currentOrgId) return;
+  currentWeekAnchor = addDays(currentWeekAnchor, -7);
+  renderWeek();
+});
+
+nextWeekBtn.addEventListener("click", () => {
+  if (!currentOrgId) return;
+  currentWeekAnchor = addDays(currentWeekAnchor, 7);
+  renderWeek();
+});
+
+todayWeekBtn.addEventListener("click", () => {
+  if (!currentOrgId) return;
+  currentWeekAnchor = new Date();
+  renderWeek();
+});
+
+
   tabAdd.addEventListener("click", () => {
     formDateInput.value = isoDate(new Date());
     startTimeInput.value = "";
@@ -1369,14 +1389,18 @@
   // -------- INIT APP --------
 
   async function initApp() {
-    updateHeaderToday();
-    const savedName = localStorage.getItem("poolauto_userName");
-    if (savedName) userNameInput.value = savedName;
-    formDateInput.value = isoDate(new Date());
+  updateHeaderToday();
 
-    await ensureCarsLoaded();
-    renderWeek();
-  }
+  const savedName = localStorage.getItem("poolauto_userName");
+  if (savedName) userNameInput.value = savedName;
+
+  // start altijd vanuit deze week
+  currentWeekAnchor = new Date();
+  formDateInput.value = isoDate(new Date());
+
+  await ensureCarsLoaded();
+  renderWeek();
+}
 
   if (currentOrgId) {
     showMainApp();
