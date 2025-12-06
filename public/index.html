@@ -7,6 +7,10 @@
   name="viewport"
   content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 />
+  <link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+/>    
   <style>
     :root {
       --bg: #f3f4f6;
@@ -40,6 +44,18 @@
       position: relative;
     }
 
+    .material-symbols-rounded {
+    font-variation-settings:
+      "FILL" 0,
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
+    font-size: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
     .hidden {
       display: none;
     }
@@ -65,6 +81,8 @@
       font-size: 13px;
       color: var(--text-muted);
       max-width: 280px;
+      margin-bottom: 20px;
+      margin-top: 20px;
     }
 
     .login-card {
@@ -100,7 +118,7 @@
       padding: 9px 10px;
       border-radius: 999px;
       border: none;
-      background-color: var(--accent-strong);
+      background-color: #e56a54;
       color: #ffffff;
       font-size: 13px;
       font-weight: 600;
@@ -109,7 +127,7 @@
     }
 
     .login-button:hover {
-      background-color: #1d4ed8;
+      background-color: #f85c41;
     }
 
     .login-message {
@@ -150,7 +168,7 @@
     }
 
     .header-left-org {
-      font-size: 11px;
+      font-size: 13px;
       opacity: 0.9;
       margin-top: 1px;
     }
@@ -314,7 +332,7 @@
     }
 
     .booking-time {
-      font-weight: 500;
+      font-weight: 600;
       font-size: 12px;
       white-space: nowrap;
       text-align: right;
@@ -664,6 +682,7 @@
   font-size: 11px;
   color: black;
   margin-left: 6px;
+  font-weight: 600;
 }
 
 
@@ -711,7 +730,7 @@
     <!-- LOGIN SCHERM -->
     <section id="loginScreen" class="login-screen">
       <div>
-        <div class="login-title">Poolauto planner</div>
+        <div class="login-title">Wagenpark beheer</div>
         <div class="login-subtitle">
           Log in met de code van jouw organisatie om de poolauto’s te beheren.
         </div>
@@ -824,21 +843,21 @@
 
       <!-- BOTTOM NAV -->
       <nav class="tab-bar">
-        <button id="tabOverview" class="tab-btn active" type="button">
-          <span class="tab-icon">🏠</span>
-          <span>Overzicht</span>
-        </button>
-        <button id="tabSearch" class="tab-btn" type="button">
-          <span class="tab-icon">🔍</span>
-          <span>Zoeken</span>
-        </button>
-        <button id="tabAdd" class="tab-btn tab-btn-add" type="button">
-          <div class="add-circle">
-            <span style="font-size:20px;">＋</span>
-          </div>
-          <span>Nieuw</span>
-        </button>
-      </nav>
+  <button id="tabOverview" class="tab-btn active" type="button">
+    <span class="tab-icon material-symbols-rounded">home</span>
+    <span>Overzicht</span>
+  </button>
+  <button id="tabSearch" class="tab-btn" type="button">
+    <span class="tab-icon material-symbols-rounded">search</span>
+    <span>Zoeken</span>
+  </button>
+  <button id="tabAdd" class="tab-btn tab-btn-add" type="button">
+    <div class="add-circle">
+      <span class="material-symbols-rounded">add</span>
+    </div>
+    <span>Nieuw</span>
+  </button>
+</nav>
 
       <!-- SHEET OVERLAY -->
       <div id="sheetOverlay" class="sheet-overlay"></div>
@@ -859,7 +878,7 @@
 
         <form id="bookingForm">
           <label for="userName">Naam</label>
-          <input id="userName" type="text" placeholder="Bijv. Ray" required />
+          <input id="userName" type="text" placeholder="Voornaam" required />
 
           <label for="carSelect">Auto</label>
 <select id="carSelect" required>
