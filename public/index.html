@@ -12,992 +12,843 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
   />
   <style>
-    :root {
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --accent: #3b82f6;
-      --accent-soft: #e0f2fe;
-      --accent-strong: #2563eb;
-      --text-main: #111827;
-      --text-muted: #6b7280;
-      --danger: #ef4444;
-      --success: #16a34a;
-      --border: #e5e7eb;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg);
-      color: var(--text-main);
-    }
-
-    .app {
-      max-width: 480px;
-      margin: 0 auto;
-      min-height: 100vh;
-      background-color: #f9fafb;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .material-symbols-rounded {
-      font-variation-settings:
-        "FILL" 0,
-        "wght" 400,
-        "GRAD" 0,
-        "opsz" 24;
-      font-size: 22px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    /* LOGIN */
-
-    .login-screen {
-      flex: 1;
-      padding: 32px 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 20px;
-    }
-
-    .login-title {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .login-subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-      max-width: 280px;
-      margin-bottom: 20px;
-      margin-top: 20px;
-    }
-
-    .login-card {
-      background-color: #ffffff;
-      border-radius: 18px;
-      padding: 16px;
-      box-shadow: 0 6px 22px rgba(15, 23, 42, 0.12);
-    }
-
-    .login-label {
-      display: block;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    .login-input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 8px;
-    }
-
-    .login-input:focus {
-      border-color: var(--accent);
-    }
-
-    .login-button {
-      width: 100%;
-      padding: 9px 10px;
-      border-radius: 999px;
-      border: none;
-      background-color: #e56a54;
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 4px;
-    }
-
-    .login-button:hover {
-      background-color: #f85c41;
-    }
-
-    .login-message {
-      font-size: 11px;
-      margin-top: 6px;
-    }
-
-    .login-message.error {
-      color: var(--danger);
-    }
-
-    .login-org-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
-
-    /* HEADER */
-
-    .header-gradient {
-      padding: 16px 20px 12px;
-      background: linear-gradient(135deg, #22c55e, #10b981, #3b82f6);
-      color: #ffffff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-left-title {
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .header-left-date {
-      font-size: 13px;
-      opacity: 0.9;
-      margin-top: 2px;
-    }
-
-    .header-left-org {
-      font-size: 13px;
-      opacity: 0.9;
-      margin-top: 1px;
-    }
-
-    .header-chip {
-      background: rgba(255, 255, 255, 0.22);
-      border-radius: 999px;
-      padding: 6px 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-    }
-
-    .header-chip-icon {
-      font-size: 16px;
-    }
-
-    /* WEEK BAR */
-
-    .week-bar {
-      background-color: #f9fafb;
-      padding: 10px 16px 8px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .week-info-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
-
-    .week-info-range {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .week-nav-buttons {
-      display: flex;
-      gap: 4px;
-    }
-
-    .week-nav-buttons button {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background-color: #ffffff;
-      font-size: 11px;
-      padding: 6px 10px;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .week-nav-buttons button:hover {
-      border-color: var(--accent);
-      color: var(--accent-strong);
-    }
-
-    /* CONTENT */
-
-    .content {
-      flex: 1;
-      padding: 8px 12px 70px;
-      overflow-y: auto;
-    }
-
-    .section-title {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin: 4px 4px 8px;
-    }
-
-    /* DAY LIST */
-
-    .day-row {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .day-date-column {
-      width: 50px;
-      align-items: center;
-      display: flex;
-      flex-direction: column;
-      padding-top: 6px;
-    }
-
-    .day-date-number {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .day-date-month {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .day-card {
-      flex: 1;
-      margin-left: 8px;
-      border-radius: 14px;
-      background-color: var(--card);
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .day-card.highlight {
-      background-color: var(--accent);
-      color: #ffffff;
-    }
-
-    .day-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .day-card-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .day-card-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .day-card.highlight .day-card-sub {
-      color: #dbeafe;
-    }
-
-    .booking-item {
-      margin-top: 4px;
-      padding: 8px 9px;
-      border-radius: 10px;
-      background-color: #f3f4f6;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-    }
-
-    .day-card.highlight .booking-item {
-      background-color: rgba(15, 23, 42, 0.25);
-      color: #e5e7eb;
-    }
-
-    .booking-label {
-      flex: 1;
-      margin-right: 6px;
-    }
-
-    .booking-time {
-      font-weight: 600;
-      font-size: 12px;
-      white-space: nowrap;
-      text-align: right;
-    }
-
-    .booking-empty {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .day-card.highlight .booking-empty {
-      color: #e5e7eb;
-    }
-
-    .booking-delete-btn {
-      border: none;
-      background: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #9ca3af;
-      margin-left: 6px;
-    }
-
-    .booking-delete-btn:hover {
-      color: #ef4444;
-    }
-
-    /* SEARCH SECTION */
-
-    .search-box {
-      background-color: #ffffff;
-      padding: 10px 12px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
-      margin-bottom: 12px;
-    }
-
-    .search-box input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      outline: none;
-    }
-
-    .search-box input:focus {
-      border-color: var(--accent);
-    }
-
-    /* BOTTOM NAV */
-
-    .tab-bar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      max-width: 480px;
-      margin: 0 auto;
-      height: 94px;
-      background-color: #ffffff;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 20;
-    }
-
-    .tab-btn {
-      flex: 1;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      color: var(--text-muted);
-      border: none;
-      background: none;
-      cursor: pointer;
-      gap: 2px;
-    }
-
-    .tab-icon {
-      font-size: 28px;
-    }
-
-    .tab-btn.active {
-      color: var(--accent-strong);
-    }
-
-    .tab-btn-add .add-circle {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      background-color: var(--accent-strong);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
-      margin-bottom: 2px;
-    }
-
-    /* BOTTOM SHEET */
-
-    .bottom-sheet {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      max-width: 480px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      border-top: 1px solid var(--border);
-      box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.25);
-      padding: 10px 14px 12px;
-      transform: translateY(100%);
-      transition: transform 0.2s ease-out;
-      z-index: 30;
-    }
-
-    .bottom-sheet.open {
-      transform: translateY(0);
-    }
-
-    .sheet-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .sheet-title {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .sheet-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .sheet-close {
-      border: none;
-      background: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: var(--text-muted);
-    }
-
-    label {
-      display: block;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
-
-    input,
-    textarea {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      outline: none;
-      margin-bottom: 6px;
-    }
-
-    input:focus,
-    textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .install-app-box {
-      margin-top: 20px;
-      padding: 14px 18px;
-      background: #ffffff;
-      border-radius: 14px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-      text-align: left;
-      font-size: 14px;
-      line-height: 1.45;
-    }
-
-    .install-title {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    .install-step {
-      margin-bottom: 12px;
-    }
-
-    .install-step ol {
-      margin: 6px 0 0 18px;
-      padding: 0;
-    }
-
-    .install-step li {
-      margin-bottom: 4px;
-    }
-
-    .install-footer {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    .logout-btn {
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      background: transparent;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-      transition:
-        background-color 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .logout-btn::before {
-      content: "⎋";
-      font-size: 13px;
-    }
-
-    /* Kentekenstijl */
-    .plate {
-      display: inline-block;
-      background: #ffd800;
-      color: #111;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 1px;
-      border: 2px solid #111;
-      font-family: system-ui, sans-serif;
-    }
-
-    .plate.small {
-      font-size: 12px;
-      padding: 2px 6px;
-      border-width: 1px;
-    }
-
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      border-color: #ffffff;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
-    }
-
-    .car-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-      margin-bottom: 6px;
-    }
-
-    #carSelect {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      outline: none;
-      margin-bottom: 6px;
-    }
-
-    #carSelect:focus {
-      border-color: var(--accent);
-    }
-
-    .logout-btn:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
-    }
-
-    .plate {
-      display: inline-block;
-      background: #ffd800;
-      color: #111827;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 12px;
-      letter-spacing: 1px;
-      border: 2px solid #111827;
-      font-family: system-ui, sans-serif;
-    }
-
-    .plate.small {
-      font-size: 11px;
-      padding: 1px 6px;
-      border-width: 1px;
-    }
-
-    .car-name-small {
-      font-size: 11px;
-      color: black;
-      margin-left: 6px;
-      font-weight: 600;
-    }
-
-    .sheet-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .sheet-row > div {
-      flex: 1;
-    }
-
-    .sheet-button {
-      margin-top: 4px;
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: none;
-      background-color: var(--accent);
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .sheet-button:hover {
-      background-color: var(--accent-strong);
-    }
-
-    .message {
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-
-    .message.error {
-      color: var(--danger);
-    }
-
-    .message.success {
-      color: var(--success);
-    }
-
-    .sheet-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.4);
-      z-index: 25;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease-out;
-    }
-
-    .sheet-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* AUTO BEHEER STYLES */
-
-    .car-section-info {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin: 0 4px 10px;
-    }
-
-    .car-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 0 4px 12px;
-    }
-
-    .car-card {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 10px 12px;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-    }
-
-    .car-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .car-name {
-      font-size: 13px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    .car-status-pill {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .car-status-ok {
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-    }
-
-    .car-status-garage {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .car-body {
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .car-status-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .car-status-row label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 0;
-    }
-
-    .car-status-row input[type="radio"] {
-      margin: 0;
-    }
-
+  :root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --accent: #3b82f6;
+    --accent-soft: #e0f2fe;
+    --accent-strong: #2563eb;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --danger: #ef4444;
+    --success: #16a34a;
+    --border: #e5e7eb;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .material-symbols-rounded {
+    font-variation-settings:
+      "FILL" 0,
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
+    font-size: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  /* LOGIN */
+
+  .login-screen {
+    flex: 1;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .login-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    max-width: 280px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+
+  .login-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.12);
+  }
+
+  .login-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .login-input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 8px;
+  }
+
+  .login-input:focus {
+    border-color: var(--accent);
+  }
+
+  .login-button {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 999px;
+    border: none;
+    background-color: #e56a54;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .login-button:hover {
+    background-color: #f85c41;
+  }
+
+  .login-message {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  .login-message.error {
+    color: var(--danger);
+  }
+
+  .login-org-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .install-app-box {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .install-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .install-step {
+    margin-bottom: 12px;
+  }
+
+  .install-step ol {
+    margin: 6px 0 0 18px;
+    padding: 0;
+  }
+
+  .install-step li {
+    margin-bottom: 4px;
+  }
+
+  .install-footer {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  /* HEADER */
+
+  .header-gradient {
+    padding: 16px 20px 12px;
+    background: linear-gradient(135deg, #22c55e, #10b981, #3b82f6);
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-left-title {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .header-left-date {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 2px;
+  }
+
+  .header-left-org {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 1px;
+  }
+
+  .header-chip {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .header-chip-icon {
+    font-size: 16px;
+  }
+
+  .logout-btn {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: transparent;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .logout-btn::before {
+    content: "⎋";
+    font-size: 13px;
+  }
+
+  .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  }
+
+  .logout-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+  }
+
+  /* WEEK BAR */
+
+  .week-bar {
+    background-color: #f9fafb;
+    padding: 10px 16px 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .week-info-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .week-info-range {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .week-nav-buttons {
+    display: flex;
+    gap: 4px;
+  }
+
+  .week-nav-buttons button {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background-color: #ffffff;
+    font-size: 11px;
+    padding: 6px 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .week-nav-buttons button:hover {
+    border-color: var(--accent);
+    color: var(--accent-strong);
+  }
+
+  /* CONTENT */
+
+  .content {
+    flex: 1;
+    padding: 8px 12px 70px;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 4px 8px;
+  }
+
+  /* DAY LIST */
+
+  .day-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .day-date-column {
+    width: 50px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    padding-top: 6px;
+  }
+
+  .day-date-number {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .day-date-month {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .day-card {
+    flex: 1;
+    margin-left: 8px;
+    border-radius: 14px;
+    background-color: var(--card);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .day-card.highlight {
+    background-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .day-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .day-card-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .day-card-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .day-card.highlight .day-card-sub {
+    color: #dbeafe;
+  }
+
+  .booking-item {
+    margin-top: 4px;
+    padding: 8px 9px;
+    border-radius: 10px;
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .day-card.highlight .booking-item {
+    background-color: rgba(15, 23, 42, 0.25);
+    color: #e5e7eb;
+  }
+
+  .booking-label {
+    flex: 1;
+    margin-right: 6px;
+  }
+
+  .booking-time {
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .booking-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .day-card.highlight .booking-empty {
+    color: #e5e7eb;
+  }
+
+  .booking-delete-btn {
+    border: none;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #9ca3af;
+    margin-left: 6px;
+  }
+
+  .booking-delete-btn:hover {
+    color: #ef4444;
+  }
+
+  /* SEARCH SECTION */
+
+  .search-box {
+    background-color: #ffffff;
+    padding: 10px 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    margin-bottom: 12px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-box input:focus {
+    border-color: var(--accent);
+  }
+
+  /* BOTTOM NAV */
+
+  .tab-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    height: 94px;
+    background-color: #ffffff;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 20;
+  }
+
+  .tab-btn {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    border: none;
+    background: none;
+    cursor: pointer;
+    gap: 2px;
+  }
+
+  .tab-icon {
+    font-size: 28px;
+  }
+
+  .tab-btn.active {
+    color: var(--accent-strong);
+  }
+
+  .tab-btn-add .add-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background-color: var(--accent-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
+    margin-bottom: 2px;
+  }
+
+  /* BOTTOM SHEET */
+
+  .bottom-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.25);
+    padding: 10px 14px 12px;
+    transform: translateY(100%);
+    transition: transform 0.2s ease-out;
+    z-index: 30;
+  }
+
+  .bottom-sheet.open {
+    transform: translateY(0);
+  }
+
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .sheet-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .sheet-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .sheet-close {
+    border: none;
+    background: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 6px;
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .sheet-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .sheet-row > div {
+    flex: 1;
+  }
+
+  .sheet-button {
+    margin-top: 4px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: none;
+    background-color: var(--accent);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sheet-button:hover {
+    background-color: var(--accent-strong);
+  }
+
+  .message {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .message.error {
+    color: var(--danger);
+  }
+
+  .message.success {
+    color: var(--success);
+  }
+
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 25;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-out;
+  }
+
+  .sheet-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Kenteken + kleine naam */
+
+  .plate {
+    display: inline-block;
+    background: #ffd800;
+    color: #111827;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1px;
+    border: 2px solid #111827;
+    font-family: system-ui, sans-serif;
+  }
+
+  .plate.small {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-width: 1px;
+  }
+
+  .car-name-small {
+    font-size: 11px;
+    color: #000;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+
+  /* AUTO BEHEER STYLES */
+
+  .car-section-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 12px 10px;
+  }
+
+  .car-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 12px 80px;
+  }
+
+  .car-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  }
+
+  .car-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .car-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .car-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .car-status-pill {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .car-status-ok {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .car-status-garage {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .car-body {
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .car-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .car-status-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .car-status-option input[type="radio"] {
+    margin: 0;
+  }
+
+  .car-dates-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .car-dates-row > div {
+    flex: 1 1 0;
+  }
+
+  .car-dates-row label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  .car-dates-row input[type="date"] {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #ffffff;
+  }
+
+  .car-dates-row input[type="date"]:focus {
+    border-color: var(--accent);
+  }
+
+  .car-save-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .car-save-btn:hover {
+    background: var(--accent-strong);
+  }
+
+  .car-message {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .car-message.success {
+    color: var(--success);
+  }
+
+  .car-message.error {
+    color: var(--danger);
+  }
+
+  .car-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 0 12px 8px;
+  }
+
+  @media (max-width: 480px) {
     .car-dates-row {
-      display: flex;
-      gap: 8px;
+      flex-direction: column;
     }
-
-    .car-dates-row > div {
-      flex: 1;
-    }
-
-    .car-dates-row label {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-      display: block;
-    }
-
-    .car-dates-row input[type="date"] {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 12px;
-      outline: none;
-      margin-bottom: 0;
-    }
-
-    .car-dates-row input[type="date"]:focus {
-      border-color: var(--accent);
-    }
-
-    .car-save-btn {
-      align-self: flex-start;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: none;
-      background: var(--accent);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 2px;
-    }
-
-    .car-save-btn:hover {
-      background: var(--accent-strong);
-    }
-
-    .car-message {
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
-    .car-message.success {
-      color: var(--success);
-    }
-
-    .car-message.error {
-      color: var(--danger);
-    }
-
-    .car-empty {
-      font-size: 12px;
-      color: var(--text-muted);
-      padding: 0 4px 8px;
-    }
-
-    @media (min-width: 700px) {
-      .app {
-        margin-top: 20px;
-        margin-bottom: 20px;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
-      }
-    }
-
-    .car-status-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.car-status-row label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-/* Zorg dat de header netjes blijft */
-.car-header {
-  align-items: flex-start;
-}
-
-/* Datumvelden: op kleine schermen onder elkaar in plaats van gepropt naast elkaar */
-.car-dates-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.car-dates-row > div {
-  flex: 1;
-}
-
-.car-dates-row input[type="date"] {
-  width: 100%;
-}
-
-@media (max-width: 480px) {
-  .car-dates-row {
-    flex-direction: column;
   }
-}
 
-/* Opslaan-knop iets los van de rand onderin */
-.car-save-btn {
-  margin-top: 6px;
-}
+  /* DESKTOP CARD LOOK */
 
-/* --- MOBILE FIXES AUTO BEHEER v2 --- */
-
-/* Zorg dat alle inputs in auto-beheer echt wit zijn */
-#carsSection input,
-#carsSection select {
-  background-color: #ffffff;
-}
-
-/* Radio-opties: netjes onder elkaar, links uitgelijnd */
-.car-status-row {
-  display: flex;
-  flex-direction: row;
-  align-items: normal;
-  gap: 18px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.car-status-row label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-/* Maak de radio’s zelf wat compacter */
-.car-status-row input[type="radio"] {
-  margin: 0;
-}
-
-/* Header van de auto-kaart netjes bovenaan uitlijnen */
-.car-header {
-  align-items: flex-start !important;
-}
-
-/* Datumvelden: full-width en mooi onder elkaar op mobiel */
-.car-dates-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.car-dates-row > div {
-  flex: 1 1 0;
-}
-
-.car-dates-row label {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-  display: block;
-}
-
-.car-dates-row input[type="date"] {
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 13px;
-  outline: none;
-  box-sizing: border-box;
-  background-color: #ffffff; /* iOS grijzige look wegdrukken */
-}
-
-.car-dates-row input[type="date"]:focus {
-  border-color: var(--accent);
-}
-
-@media (max-width: 480px) {
-  .car-dates-row {
-    flex-direction: column;
-  }
-}
-
-/* Opslaan-knop iets los van datumvelden */
-.car-save-btn {
-  margin-top: 8px;
-}
-
-
-    /* Voorkom iOS auto-zoom op invoervelden */
-    @media (max-width: 768px) {
-      input,
-      textarea,
-      select {
-        font-size: 16px !important;
-      }
+  @media (min-width: 700px) {
+    .app {
+      margin-top: 20px;
+      margin-bottom: 20px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
     }
-  </style>
+  }
+
+  /* Voorkom iOS auto-zoom op invoervelden */
+  @media (max-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+</style>
+
 </head>
 <body>
   <div class="app">
