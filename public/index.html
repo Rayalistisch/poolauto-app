@@ -590,12 +590,23 @@
     display: flex;
     gap: 8px;
     margin-bottom: 6px;
-    flex-wrap: wrap;
   }
 
   .sheet-row > div {
     flex: 1;
-    min-width: 0;
+  }
+
+  .sheet-row-times {
+    flex-wrap: wrap;
+  }
+
+  .sheet-row-times > div {
+    flex: 1 1 150px;
+    min-width: 150px;
+  }
+
+  .sheet-date-input {
+    background-color: #ffffff;
   }
 
   .sheet-button {
@@ -833,6 +844,17 @@
     }
   }
 
+  @media (max-width: 420px) {
+    .sheet-row-times {
+      flex-direction: column;
+    }
+
+    .sheet-row-times > div {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
   /* DESKTOP CARD LOOK */
 
   @media (min-width: 700px) {
@@ -1038,9 +1060,9 @@
           <input id="userName" type="text" placeholder="Voornaam" required />
 
           <label for="formDate">Datum</label>
-          <input id="formDate" type="date" required />
+          <input id="formDate" class="sheet-date-input" type="date" required />
 
-          <div class="sheet-row">
+          <div class="sheet-row sheet-row-times">
             <div>
               <label for="startTime">Start</label>
               <input id="startTime" type="time" required />
