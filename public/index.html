@@ -1025,7 +1025,7 @@
           <div>
             <div class="sheet-title">Nieuwe reservering</div>
             <div class="sheet-sub">
-              Er wordt automatisch een beschikbare poolauto toegewezen.
+               Kies een periode, dan zie je welke poolauto's beschikbaar zijn.
             </div>
           </div>
           <button id="sheetCloseBtn" class="sheet-close" type="button">
@@ -1038,12 +1038,6 @@
         <form id="bookingForm">
           <label for="userName">Naam</label>
           <input id="userName" type="text" placeholder="Voornaam" required />
-
-          <label for="carSelect">Auto</label>
-          <select id="carSelect" required>
-            <option value="">Selecteer een auto…</option>
-          </select>
-          <div id="carAvailabilityHint" class="car-hint"></div>
 
           <label for="formDate">Datum</label>
           <input id="formDate" type="date" required />
@@ -1058,6 +1052,12 @@
               <input id="endTime" type="time" required />
             </div>
           </div>
+
+          <label for="carSelect">Auto</label>
+          <select id="carSelect" required>
+            <option value="">Selecteer een auto…</option>
+          </select>
+          <div id="carAvailabilityHint" class="car-hint"></div>
 
           <label for="note">Opmerking (optioneel)</label>
           <textarea
