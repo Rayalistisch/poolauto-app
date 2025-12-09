@@ -10,8 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- SUPABASE CLIENT ---
-const SUPABASE_URL =
-  process.env.SUPABASE_URL || "";
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
 
@@ -62,15 +61,6 @@ function loadAccounts() {
 
 loadAccounts();
 
-// ---- POOLAUTO'S (nog steeds hardcoded) ----
-const cars = [
-  { id: 1, name: "Toyota Aygo", license: "S-551-FT" },
-  { id: 2, name: "Peugeot 107", license: "Z-365-HK" },
-  { id: 3, name: "Citroën C1", license: "39-RGG-5" },
-  { id: 4, name: "Citroën C1", license: "X-728-DH" },
-  { id: 5, name: "MB Bus", license: "V-840-NP" },
-];
-
 // Helper overlap
 function isOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
@@ -99,12 +89,82 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-// Alle auto's (zonder beschikbaarheid)
-app.get("/api/cars", (req, res) => {
-  res.json(cars);
+//
+// ---------- AUTO'S (Supabase) ----------
+//
+
+// Alle auto's uit Supabase (incl. status)
+app.get("/api/cars", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("cars")
+      .select("id, name, license, status")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("Supabase fout GET /api/cars:", error);
+      return res.status(500).json({ error: "Kon auto's niet ophalen." });
+    }
+
+    const cars = (data || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      license: c.license,
+      status: c.status || "ok",
+    }));
+
+    res.json(cars);
+  } catch (err) {
+    console.error("Serverfout GET /api/cars:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
 });
 
-// Beschikbaarheid per auto op basis van Supabase bookings
+// Auto status aanpassen (bijv. 'garage' / 'ok')
+app.patch("/api/cars/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { status } = req.body;
+
+  if (!["ok", "garage"].includes(status)) {
+    return res
+      .status(400)
+      .json({ error: "Ongeldige status. Gebruik 'ok' of 'garage'." });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("cars")
+      .update({ status })
+      .eq("id", id)
+      .select("id, name, license, status")
+      .single();
+
+    if (error) {
+      console.error("Supabase fout PATCH /api/cars/:id:", error);
+      return res
+        .status(500)
+        .json({ error: "Kon status niet bijwerken in de database." });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Auto niet gevonden." });
+    }
+
+    const normalized = {
+      id: data.id,
+      name: data.name,
+      license: data.license,
+      status: data.status,
+    };
+
+    res.json(normalized);
+  } catch (err) {
+    console.error("Serverfout PATCH /api/cars/:id:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// Beschikbaarheid per auto op basis van Supabase bookings + status
 app.get("/api/cars/availability", async (req, res) => {
   const { start, end, orgId } = req.query;
 
@@ -119,25 +179,41 @@ app.get("/api/cars/availability", async (req, res) => {
   const endDate = new Date(end);
 
   try {
-    // Haal alle bookings voor deze org op
-    const { data: orgBookings, error } = await supabase
+    // 1) Haal alle auto's op
+    const { data: carsData, error: carsError } = await supabase
+      .from("cars")
+      .select("id, name, license, status")
+      .order("id", { ascending: true });
+
+    if (carsError) {
+      console.error("Supabase fout (cars) /api/cars/availability:", carsError);
+      return res.status(500).json({ error: "Kon auto's niet ophalen." });
+    }
+
+    const cars = carsData || [];
+
+    // 2) Haal alle bookings voor deze org op
+    const { data: orgBookings, error: bookingsError } = await supabase
       .from("bookings")
       .select("*")
-      .eq("org_id", orgIdNum); // ✅ DB-kolom is org_id
+      .eq("org_id", orgIdNum);
 
-    if (error) {
-      console.error("Supabase fout /api/cars/availability:", error);
+    if (bookingsError) {
+      console.error(
+        "Supabase fout (bookings) /api/cars/availability:",
+        bookingsError
+      );
       return res
         .status(500)
         .json({ error: "Kon reserveringen niet ophalen." });
     }
 
     const result = cars.map((car) => {
-      const conflict = (orgBookings || []).some((b) => {
-        // ✅ DB-kolom is car_id
-        if (b.car_id !== car.id) return false;
+      const status = car.status || "ok";
+      const isGarage = status === "garage";
 
-        // Ga er vanuit dat kolommen 'start' en 'end' heten in de DB
+      const conflict = (orgBookings || []).some((b) => {
+        if (b.car_id !== car.id) return false;
         return isOverlap(
           startDate,
           endDate,
@@ -147,8 +223,11 @@ app.get("/api/cars/availability", async (req, res) => {
       });
 
       return {
-        ...car,
-        available: !conflict,
+        id: car.id,
+        name: car.name,
+        license: car.license,
+        status,
+        available: !isGarage && !conflict,
       };
     });
 
@@ -159,6 +238,9 @@ app.get("/api/cars/availability", async (req, res) => {
   }
 });
 
+//
+// ---------- BOOKINGS (Supabase) ----------
+//
 
 // Alle bookings (gefilterd op org + optioneel datum)
 app.get("/api/bookings", async (req, res) => {
@@ -196,7 +278,7 @@ app.get("/api/bookings", async (req, res) => {
         .json({ error: "Kon reserveringen niet ophalen." });
     }
 
-    // ✅ Map snake_case (DB) → camelCase/front-end verwachte keys
+    // Map snake_case → camelCase
     const normalized = (data || []).map((b) => ({
       id: b.id,
       orgId: b.org_id,
@@ -214,9 +296,6 @@ app.get("/api/bookings", async (req, res) => {
   }
 });
 
-
-
-// Nieuwe booking (via Supabase, met gekozen auto)
 // Nieuwe booking (via Supabase, met gekozen auto)
 app.post("/api/bookings", async (req, res) => {
   const { userName, start, end, note, orgId, carId } = req.body;
@@ -238,11 +317,6 @@ app.post("/api/bookings", async (req, res) => {
   const orgIdNum = Number(orgId);
   const carIdNum = Number(carId);
 
-  const car = cars.find((c) => c.id === carIdNum);
-  if (!car) {
-    return res.status(400).json({ error: "Onbekende auto" });
-  }
-
   const startDate = new Date(start);
   const endDate = new Date(end);
 
@@ -253,6 +327,28 @@ app.post("/api/bookings", async (req, res) => {
   }
 
   try {
+    // Check of auto bestaat en status niet 'garage' is
+    const { data: carData, error: carError } = await supabase
+      .from("cars")
+      .select("id, status")
+      .eq("id", carIdNum)
+      .single();
+
+    if (carError) {
+      console.error("Supabase fout auto-check /api/bookings:", carError);
+      return res.status(400).json({ error: "Onbekende auto." });
+    }
+
+    if (!carData) {
+      return res.status(400).json({ error: "Onbekende auto." });
+    }
+
+    if ((carData.status || "ok") === "garage") {
+      return res
+        .status(409)
+        .json({ error: "Deze auto staat op 'garage / niet beschikbaar'." });
+    }
+
     // Check overlap voor deze auto binnen deze org
     const { data: overlapping, error: overlapErr } = await supabase
       .from("bookings")
@@ -297,7 +393,6 @@ app.post("/api/bookings", async (req, res) => {
         .json({ error: "Kon reservering niet opslaan." });
     }
 
-    // ✅ Zelfde normalized shape als GET
     const normalized = {
       id: data.id,
       orgId: data.org_id,
@@ -314,8 +409,6 @@ app.post("/api/bookings", async (req, res) => {
     res.status(500).json({ error: "Interne serverfout." });
   }
 });
-
-
 
 // Reservering verwijderen
 app.delete("/api/bookings/:id", async (req, res) => {
