@@ -568,7 +568,8 @@
   }
 
   input,
-  textarea {
+  textarea,
+  select {
     width: 100%;
     padding: 6px 8px;
     border-radius: 8px;
@@ -579,7 +580,8 @@
   }
 
   input:focus,
-  textarea:focus {
+  textarea:focus,
+  select:focus {
     border-color: var(--accent);
   }
 
@@ -845,6 +847,17 @@
     textarea,
     select {
       font-size: 16px !important;
+    }
+  }
+
+  @supports (padding: env(safe-area-inset-bottom)) {
+    .tab-bar {
+      padding-bottom: env(safe-area-inset-bottom);
+      height: calc(94px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-sheet {
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
   }
 </style>
