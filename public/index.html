@@ -859,6 +859,53 @@
       }
     }
 
+    .car-status-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.car-status-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Zorg dat de header netjes blijft */
+.car-header {
+  align-items: flex-start;
+}
+
+/* Datumvelden: op kleine schermen onder elkaar in plaats van gepropt naast elkaar */
+.car-dates-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.car-dates-row > div {
+  flex: 1;
+}
+
+.car-dates-row input[type="date"] {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .car-dates-row {
+    flex-direction: column;
+  }
+}
+
+/* Opslaan-knop iets los van de rand onderin */
+.car-save-btn {
+  margin-top: 6px;
+}
+
     /* Voorkom iOS auto-zoom op invoervelden */
     @media (max-width: 768px) {
       input,
