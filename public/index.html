@@ -906,6 +906,88 @@
   margin-top: 6px;
 }
 
+/* --- MOBILE FIXES AUTO BEHEER v2 --- */
+
+/* Zorg dat alle inputs in auto-beheer echt wit zijn */
+#carsSection input,
+#carsSection select {
+  background-color: #ffffff;
+}
+
+/* Radio-opties: netjes onder elkaar, links uitgelijnd */
+.car-status-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.car-status-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Maak de radio’s zelf wat compacter */
+.car-status-row input[type="radio"] {
+  margin: 0;
+}
+
+/* Header van de auto-kaart netjes bovenaan uitlijnen */
+.car-header {
+  align-items: flex-start !important;
+}
+
+/* Datumvelden: full-width en mooi onder elkaar op mobiel */
+.car-dates-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.car-dates-row > div {
+  flex: 1 1 0;
+}
+
+.car-dates-row label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: block;
+}
+
+.car-dates-row input[type="date"] {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  background-color: #ffffff; /* iOS grijzige look wegdrukken */
+}
+
+.car-dates-row input[type="date"]:focus {
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .car-dates-row {
+    flex-direction: column;
+  }
+}
+
+/* Opslaan-knop iets los van datumvelden */
+.car-save-btn {
+  margin-top: 8px;
+}
+
+
     /* Voorkom iOS auto-zoom op invoervelden */
     @media (max-width: 768px) {
       input,
