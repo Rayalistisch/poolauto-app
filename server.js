@@ -90,15 +90,17 @@ app.post("/api/login", (req, res) => {
 });
 
 //
-// ---------- AUTO'S (Supabase) ----------
+// ---------- AUTO'S (Supabase + garage-periode) ----------
 //
 
-// Alle auto's uit Supabase (incl. status)
+// Alle auto's uit Supabase (incl. status + garage-periode)
 app.get("/api/cars", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("cars")
-      .select("id, name, license, status")
+      .select(
+        "id, name, license, status, unavailable_from, unavailable_until"
+      )
       .order("id", { ascending: true });
 
     if (error) {
@@ -111,6 +113,8 @@ app.get("/api/cars", async (req, res) => {
       name: c.name,
       license: c.license,
       status: c.status || "ok",
+      unavailableFrom: c.unavailable_from,
+      unavailableUntil: c.unavailable_until,
     }));
 
     res.json(cars);
@@ -120,10 +124,29 @@ app.get("/api/cars", async (req, res) => {
   }
 });
 
-// Auto status aanpassen (bijv. 'garage' / 'ok')
+// Helper: date-string ('YYYY-MM-DD' of ISO) -> start-of-day / end-of-day ISO
+function toDayStartIso(dateStr) {
+  if (!dateStr) return null;
+  // Als al een ISO string is, gewoon new Date → ISO
+  if (dateStr.includes("T")) {
+    return new Date(dateStr).toISOString();
+  }
+  // Anders "YYYY-MM-DD" → 00:00:00Z
+  return new Date(dateStr + "T00:00:00.000Z").toISOString();
+}
+
+function toDayEndIso(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr.includes("T")) {
+    return new Date(dateStr).toISOString();
+  }
+  return new Date(dateStr + "T23:59:59.999Z").toISOString();
+}
+
+// Auto status + garage-periode aanpassen
 app.patch("/api/cars/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { status } = req.body;
+  const { status, unavailableFrom, unavailableUntil } = req.body;
 
   if (!["ok", "garage"].includes(status)) {
     return res
@@ -131,12 +154,30 @@ app.patch("/api/cars/:id", async (req, res) => {
       .json({ error: "Ongeldige status. Gebruik 'ok' of 'garage'." });
   }
 
+  let updatePayload = { status };
+
+  // Datum-range (optioneel)
+  if (unavailableFrom || unavailableUntil) {
+    updatePayload.unavailable_from = unavailableFrom
+      ? toDayStartIso(unavailableFrom)
+      : null;
+    updatePayload.unavailable_until = unavailableUntil
+      ? toDayEndIso(unavailableUntil)
+      : null;
+  } else {
+    // Als geen datums meegestuurd: reset
+    updatePayload.unavailable_from = null;
+    updatePayload.unavailable_until = null;
+  }
+
   try {
     const { data, error } = await supabase
       .from("cars")
-      .update({ status })
+      .update(updatePayload)
       .eq("id", id)
-      .select("id, name, license, status")
+      .select(
+        "id, name, license, status, unavailable_from, unavailable_until"
+      )
       .single();
 
     if (error) {
@@ -155,6 +196,8 @@ app.patch("/api/cars/:id", async (req, res) => {
       name: data.name,
       license: data.license,
       status: data.status,
+      unavailableFrom: data.unavailable_from,
+      unavailableUntil: data.unavailable_until,
     };
 
     res.json(normalized);
@@ -164,7 +207,7 @@ app.patch("/api/cars/:id", async (req, res) => {
   }
 });
 
-// Beschikbaarheid per auto op basis van Supabase bookings + status
+// Beschikbaarheid per auto op basis van Supabase bookings + status + range
 app.get("/api/cars/availability", async (req, res) => {
   const { start, end, orgId } = req.query;
 
@@ -182,7 +225,9 @@ app.get("/api/cars/availability", async (req, res) => {
     // 1) Haal alle auto's op
     const { data: carsData, error: carsError } = await supabase
       .from("cars")
-      .select("id, name, license, status")
+      .select(
+        "id, name, license, status, unavailable_from, unavailable_until"
+      )
       .order("id", { ascending: true });
 
     if (carsError) {
@@ -210,8 +255,24 @@ app.get("/api/cars/availability", async (req, res) => {
 
     const result = cars.map((car) => {
       const status = car.status || "ok";
-      const isGarage = status === "garage";
 
+      // Garage op basis van status + optionele periode
+      let isGarageForThisRequest = false;
+      if (status === "garage") {
+        if (car.unavailable_from && car.unavailable_until) {
+          isGarageForThisRequest = isOverlap(
+            startDate,
+            endDate,
+            new Date(car.unavailable_from),
+            new Date(car.unavailable_until)
+          );
+        } else {
+          // Geen datums ingesteld → altijd garage
+          isGarageForThisRequest = true;
+        }
+      }
+
+      // Conflicterende bookings
       const conflict = (orgBookings || []).some((b) => {
         if (b.car_id !== car.id) return false;
         return isOverlap(
@@ -227,7 +288,9 @@ app.get("/api/cars/availability", async (req, res) => {
         name: car.name,
         license: car.license,
         status,
-        available: !isGarage && !conflict,
+        unavailableFrom: car.unavailable_from,
+        unavailableUntil: car.unavailable_until,
+        available: !isGarageForThisRequest && !conflict,
       };
     });
 
@@ -296,7 +359,7 @@ app.get("/api/bookings", async (req, res) => {
   }
 });
 
-// Nieuwe booking (via Supabase, met gekozen auto)
+// Nieuwe booking (via Supabase, met gekozen auto + check garage-periode)
 app.post("/api/bookings", async (req, res) => {
   const { userName, start, end, note, orgId, carId } = req.body;
 
@@ -327,10 +390,10 @@ app.post("/api/bookings", async (req, res) => {
   }
 
   try {
-    // Check of auto bestaat en status niet 'garage' is
+    // Check of auto bestaat en status / periode dit tijdvak blokkeren
     const { data: carData, error: carError } = await supabase
       .from("cars")
-      .select("id, status")
+      .select("id, status, unavailable_from, unavailable_until")
       .eq("id", carIdNum)
       .single();
 
@@ -343,10 +406,28 @@ app.post("/api/bookings", async (req, res) => {
       return res.status(400).json({ error: "Onbekende auto." });
     }
 
-    if ((carData.status || "ok") === "garage") {
-      return res
-        .status(409)
-        .json({ error: "Deze auto staat op 'garage / niet beschikbaar'." });
+    const status = carData.status || "ok";
+
+    let isGarageForThisRequest = false;
+    if (status === "garage") {
+      if (carData.unavailable_from && carData.unavailable_until) {
+        isGarageForThisRequest = isOverlap(
+          startDate,
+          endDate,
+          new Date(carData.unavailable_from),
+          new Date(carData.unavailable_until)
+        );
+      } else {
+        // Geen periode → altijd garage
+        isGarageForThisRequest = true;
+      }
+    }
+
+    if (isGarageForThisRequest) {
+      return res.status(409).json({
+        error:
+          "Deze auto staat in deze periode op 'garage / niet beschikbaar'.",
+      });
     }
 
     // Check overlap voor deze auto binnen deze org

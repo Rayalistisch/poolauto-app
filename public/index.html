@@ -572,6 +572,7 @@
       font-size: 13px;
     }
 
+    /* Kentekenstijl */
     .plate {
       display: inline-block;
       background: #ffd800;
@@ -623,6 +624,32 @@
       box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
     }
 
+    .plate {
+      display: inline-block;
+      background: #ffd800;
+      color: #111827;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      border: 2px solid #111827;
+      font-family: system-ui, sans-serif;
+    }
+
+    .plate.small {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-width: 1px;
+    }
+
+    .car-name-small {
+      font-size: 11px;
+      color: black;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+
     .sheet-row {
       display: flex;
       gap: 8px;
@@ -654,38 +681,12 @@
       margin-bottom: 4px;
     }
 
-    .plate {
-      display: inline-block;
-      background: #ffd800;
-      color: #111827;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 12px;
-      letter-spacing: 1px;
-      border: 2px solid #111827;
-      font-family: system-ui, sans-serif;
-    }
-
-    .plate.small {
-      font-size: 11px;
-      padding: 1px 6px;
-      border-width: 1px;
-    }
-
-    .car-name-small {
-      font-size: 11px;
-      color: black;
-      margin-left: 6px;
-      font-weight: 600;
+    .message.error {
+      color: var(--danger);
     }
 
     .message.success {
       color: var(--success);
-    }
-
-    .message.error {
-      color: var(--danger);
     }
 
     .sheet-overlay {
@@ -703,72 +704,149 @@
       pointer-events: auto;
     }
 
-    /* AUTO BEHEER LIST STYLES */
+    /* AUTO BEHEER STYLES */
 
-    .cars-list {
+    .car-section-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0 4px 10px;
+    }
+
+    .car-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin: 0 4px 16px;
+      padding: 0 4px 12px;
     }
 
-    .car-row {
-      background-color: #ffffff;
-      border-radius: 12px;
+    .car-card {
+      background: var(--card);
+      border-radius: 14px;
       padding: 10px 12px;
-      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    }
+
+    .car-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
+      margin-bottom: 6px;
     }
 
-    .car-main {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .car-title {
-      font-size: 14px;
+    .car-name {
+      font-size: 13px;
       font-weight: 600;
-    }
-
-    .car-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .car-status-select {
-      font-size: 12px;
-      border-radius: 999px;
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      background-color: #f9fafb;
-    }
-
-    .car-status-select:focus {
-      outline: none;
-      border-color: var(--accent);
+      margin-top: 2px;
     }
 
     .car-status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 8px;
-      border-radius: 999px;
       font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
 
-    .car-status-pill.ok {
+    .car-status-ok {
       background: var(--accent-soft);
       color: var(--accent-strong);
     }
 
-    .car-status-pill.garage {
-      background: #fef2f2;
+    .car-status-garage {
+      background: #fee2e2;
       color: #b91c1c;
+    }
+
+    .car-body {
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .car-status-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .car-status-row label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 0;
+    }
+
+    .car-status-row input[type="radio"] {
+      margin: 0;
+    }
+
+    .car-dates-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .car-dates-row > div {
+      flex: 1;
+    }
+
+    .car-dates-row label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      display: block;
+    }
+
+    .car-dates-row input[type="date"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 0;
+    }
+
+    .car-dates-row input[type="date"]:focus {
+      border-color: var(--accent);
+    }
+
+    .car-save-btn {
+      align-self: flex-start;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    .car-save-btn:hover {
+      background: var(--accent-strong);
+    }
+
+    .car-message {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .car-message.success {
+      color: var(--success);
+    }
+
+    .car-message.error {
+      color: var(--danger);
+    }
+
+    .car-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 0 4px 8px;
     }
 
     @media (min-width: 700px) {
@@ -821,7 +899,7 @@
             <div class="install-step">
               <strong>iPhone (Safari):</strong>
               <ol>
-                <li>Druk onderin op het <strong>deel-icoon</strong>.</li>
+                <li>Druk onderin op de <strong>deelknop</strong>.</li>
                 <li>Kies <strong>‘Zet op beginscherm’</strong>.</li>
                 <li>Zorg dat <strong>Open als webapp</strong> aan staat.</li>
               </ol>
@@ -898,13 +976,7 @@
               placeholder="Zoek op naam (komt later)"
             />
           </div>
-          <p
-            style="
-              font-size: 12px;
-              color: var(--text-muted);
-              padding: 0 4px;
-            "
-          >
+          <p style="font-size:12px; color:var(--text-muted); padding:0 4px;">
             Hier kun je later zoeken op naam van medewerker of cliënt over alle
             reserveringen.
           </p>
@@ -913,18 +985,12 @@
         <!-- Auto beheer -->
         <section id="carsSection" class="hidden">
           <div class="section-title">Auto beheer</div>
-          <p
-            style="
-              font-size: 12px;
-              color: var(--text-muted);
-              padding: 0 4px;
-              margin-bottom: 8px;
-            "
-          >
-            Zet een auto tijdelijk op <strong>garage / niet beschikbaar</strong> als deze
-            naar de garage is, schade heeft of om een andere reden niet geboekt mag worden.
+          <p class="car-section-info">
+            Zet poolauto's tijdelijk op <strong>garage</strong> en geef aan van
+            wanneer tot wanneer ze niet beschikbaar zijn. Buiten die periode
+            zijn ze weer boekbaar.
           </p>
-          <div id="carsList"></div>
+          <div id="carsContainer" class="car-list"></div>
         </section>
       </main>
 
@@ -934,17 +1000,14 @@
           <span class="tab-icon material-symbols-rounded">home</span>
           <span>Overzicht</span>
         </button>
-
         <button id="tabSearch" class="tab-btn" type="button">
           <span class="tab-icon material-symbols-rounded">search</span>
           <span>Zoeken</span>
         </button>
-
         <button id="tabCars" class="tab-btn" type="button">
           <span class="tab-icon material-symbols-rounded">garage</span>
           <span>Auto's</span>
         </button>
-
         <button id="tabAdd" class="tab-btn tab-btn-add" type="button">
           <div class="add-circle">
             <span class="material-symbols-rounded">add</span>
@@ -965,7 +1028,9 @@
               Er wordt automatisch een beschikbare poolauto toegewezen.
             </div>
           </div>
-          <button id="sheetCloseBtn" class="sheet-close" type="button">×</button>
+          <button id="sheetCloseBtn" class="sheet-close" type="button">
+            ×
+          </button>
         </div>
 
         <div id="message"></div>
@@ -1001,7 +1066,9 @@
             placeholder="Bijv. bezoek cliënt X"
           ></textarea>
 
-          <button class="sheet-button" type="submit">Reservering opslaan</button>
+          <button class="sheet-button" type="submit">
+            Reservering opslaan
+          </button>
         </form>
       </section>
     </div>
@@ -1040,11 +1107,13 @@
     const overviewSection = document.getElementById("overviewSection");
     const searchSection = document.getElementById("searchSection");
     const carsSection = document.getElementById("carsSection");
+
     const tabOverview = document.getElementById("tabOverview");
     const tabSearch = document.getElementById("tabSearch");
     const tabCars = document.getElementById("tabCars");
     const tabAdd = document.getElementById("tabAdd");
-    const carsList = document.getElementById("carsList");
+
+    const carsContainer = document.getElementById("carsContainer");
 
     // Bottom sheet
     const bottomSheet = document.getElementById("bottomSheet");
@@ -1127,7 +1196,12 @@
       if (allCars.length) return;
       try {
         const res = await fetch(API_BASE + "/api/cars");
-        allCars = await res.json();
+        const data = await res.json();
+        allCars = (data || []).map((c) => ({
+          id: c.id,
+          name: c.name,
+          license: c.license,
+        }));
       } catch (err) {
         console.error("Kon auto's niet laden:", err);
         allCars = [];
@@ -1136,108 +1210,143 @@
 
     // -------- AUTO BEHEER --------
 
-    // Verwacht dat /api/cars ook een veld 'status' teruggeeft, bijvoorbeeld:
-    // { id, name, license, status: "ok" | "garage" }
+    async function fetchCars() {
+      const res = await fetch(API_BASE + "/api/cars");
+      return await res.json();
+    }
+
     async function renderCars() {
-      if (!currentOrgId) return;
-
       try {
-        const res = await fetch(API_BASE + "/api/cars");
-        const cars = await res.json();
+        const cars = await fetchCars();
+        carsContainer.innerHTML = "";
 
-        // allCars bijwerken zodat overzicht & availability dezelfde bron gebruiken
-        allCars = cars;
-
-        if (!cars.length) {
-          carsList.innerHTML =
-            '<p style="font-size:12px; color:var(--text-muted); padding:0 4px;">Nog geen auto\'s toegevoegd.</p>';
+        if (!cars || cars.length === 0) {
+          carsContainer.innerHTML =
+            '<p class="car-empty">Nog geen auto&#39;s gevonden.</p>';
           return;
         }
 
-        const html = cars
-          .map((car) => {
-            const status = car.status || "ok";
-            const pillClass = status === "garage" ? "garage" : "ok";
-            const pillText =
-              status === "garage"
-                ? "Garage / niet beschikbaar"
-                : "Beschikbaar";
+        cars.forEach((car) => {
+          const card = document.createElement("div");
+          card.className = "car-card";
 
-            return `
-          <div class="car-row">
-            <div class="car-main">
-              <div class="car-title">
-                <span class="plate small">${car.license}</span>
-                <span class="car-name-small">${car.name}</span>
+          const statusLabel =
+            car.status === "garage"
+              ? "Garage / niet beschikbaar"
+              : "Beschikbaar";
+
+          const fromVal = car.unavailableFrom
+            ? String(car.unavailableFrom).slice(0, 10)
+            : "";
+          const untilVal = car.unavailableUntil
+            ? String(car.unavailableUntil).slice(0, 10)
+            : "";
+
+          card.innerHTML = `
+            <div class="car-header">
+              <div>
+                <div><span class="plate">${car.license}</span></div>
+                <div class="car-name">${car.name}</div>
               </div>
-              <div class="car-meta">
-                <span class="car-status-pill ${pillClass}">
-                  ● ${pillText}
-                </span>
+              <div class="car-status-pill ${
+                car.status === "garage"
+                  ? "car-status-garage"
+                  : "car-status-ok"
+              }">
+                ${statusLabel}
               </div>
             </div>
-            <div>
-              <select
-                class="car-status-select"
-                data-car-id="${car.id}"
-              >
-                <option value="ok" ${
-                  status === "ok" ? "selected" : ""
-                }>Beschikbaar</option>
-                <option value="garage" ${
-                  status === "garage" ? "selected" : ""
-                }>Garage / niet beschikbaar</option>
-              </select>
+            <div class="car-body">
+              <div class="car-status-row">
+                <label>
+                  <input type="radio" name="status-${car.id}" value="ok" ${
+            car.status !== "garage" ? "checked" : ""
+          }>
+                  Beschikbaar
+                </label>
+                <label>
+                  <input type="radio" name="status-${car.id}" value="garage" ${
+            car.status === "garage" ? "checked" : ""
+          }>
+                  Garage / niet beschikbaar
+                </label>
+              </div>
+              <div class="car-dates-row">
+                <div>
+                  <label>Van</label>
+                  <input type="date" class="car-from" value="${fromVal}">
+                </div>
+                <div>
+                  <label>Tot en met</label>
+                  <input type="date" class="car-until" value="${untilVal}">
+                </div>
+              </div>
+              <button class="car-save-btn" type="button">Opslaan</button>
+              <div class="car-message"></div>
             </div>
-          </div>
-        `;
-          })
-          .join("");
+          `;
 
-        carsList.innerHTML = `<div class="cars-list">${html}</div>`;
+          const saveBtn = card.querySelector(".car-save-btn");
+          const msgEl = card.querySelector(".car-message");
+          const fromInput = card.querySelector(".car-from");
+          const untilInput = card.querySelector(".car-until");
+          const statusInputs = card.querySelectorAll(
+            `input[name="status-${car.id}"]`
+          );
 
-        // Event listeners op alle selects
-        document.querySelectorAll(".car-status-select").forEach((selectEl) => {
-          selectEl.addEventListener("change", async (e) => {
-            const carId = e.target.getAttribute("data-car-id");
-            const newStatus = e.target.value;
-            await updateCarStatus(carId, newStatus);
+          function showCarMsg(text, type) {
+            msgEl.textContent = text;
+            msgEl.className = "car-message" + (type ? " " + type : "");
+          }
+
+          saveBtn.addEventListener("click", async () => {
+            const selectedStatus =
+              Array.from(statusInputs).find((i) => i.checked)?.value || "ok";
+            const from = fromInput.value || null;
+            const until = untilInput.value || null;
+
+            showCarMsg("Opslaan...", "loading");
+
+            try {
+              const res = await fetch(API_BASE + "/api/cars/" + car.id, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  status: selectedStatus,
+                  unavailableFrom: from,
+                  unavailableUntil: until,
+                }),
+              });
+
+              const data = await res.json();
+
+              if (!res.ok) {
+                showCarMsg(
+                  data.error || "Kon auto niet bijwerken.",
+                  "error"
+                );
+                return;
+              }
+
+              showCarMsg("Opgeslagen ✔️", "success");
+              // kleine delay en dan herladen voor verse status-pill
+              setTimeout(renderCars, 400);
+            } catch (err) {
+              console.error("Fout bij updaten auto:", err);
+              showCarMsg("Er ging iets mis bij opslaan.", "error");
+            }
           });
+
+          carsContainer.appendChild(card);
         });
       } catch (err) {
-        console.error("Fout bij laden auto's:", err);
-        carsList.innerHTML =
-          '<p style="font-size:12px; color:var(--danger); padding:0 4px;">Kon auto\'s niet laden.</p>';
+        console.error("Fout bij ophalen auto's:", err);
+        carsContainer.innerHTML =
+          '<p class="car-empty">Kon auto&#39;s niet laden.</p>';
       }
     }
 
-    // Stuurt status naar backend
-    async function updateCarStatus(carId, status) {
-      try {
-        const res = await fetch(API_BASE + "/api/cars/" + carId, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
-        });
-
-        if (!res.ok) {
-          throw new Error("Status bijwerken mislukt");
-        }
-
-        // Weekoverzicht & beschikbaarheid opnieuw laden
-        allCars = []; // forceer herladen
-        await ensureCarsLoaded();
-        await renderWeek();
-        if (bottomSheet.classList.contains("open")) {
-          updateCarAvailability();
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Kon status niet aanpassen. Probeer het later opnieuw.");
-      }
-    }
-
-    // -------- AUTO AVAILABILITY --------
+    // -------- AUTO AVAILABILITY (voor boekingen) --------
 
     async function updateCarAvailability() {
       if (!currentOrgId) return;
@@ -1267,8 +1376,8 @@
         const res = await fetch(url);
         const data = await res.json();
 
-        // AllCars bijwerken (voor gebruik in overzicht)
-        allCars = data.map((c) => ({
+        // allCars bijwerken (voor gebruik in overzicht)
+        allCars = (data || []).map((c) => ({
           id: c.id,
           name: c.name,
           license: c.license,
@@ -1277,11 +1386,8 @@
         carSelect.innerHTML = `<option value="">Kies een auto…</option>`;
         let firstAvailable = null;
 
-        data.forEach((car) => {
-          // Bij /api/cars: 'available' niet gezet → treat as true
-          const available =
-            car.available !== false && car.status !== "garage";
-
+        (data || []).forEach((car) => {
+          const available = car.available !== false; // bij /api/cars is 'available' niet gezet → treat as true
           const opt = document.createElement("option");
           opt.value = car.id;
           opt.textContent =
@@ -1327,7 +1433,7 @@
         })}`;
 
       const bookingsPerDay = await Promise.all(
-        days.map((d) => fetchBookingsForDate(isoDate(d))),
+        days.map((d) => fetchBookingsForDate(isoDate(d)))
       );
 
       daysContainer.innerHTML = "";
@@ -1342,11 +1448,13 @@
         row.className = "day-row";
 
         row.innerHTML = `
-        <div class="day-date-column">
-          <div class="day-date-number">${date.getDate()}</div>
-          <div class="day-date-month">${date.toLocaleDateString("nl-NL", { month: "short" })}</div>
-        </div>
-      `;
+          <div class="day-date-column">
+            <div class="day-date-number">${date.getDate()}</div>
+            <div class="day-date-month">${date.toLocaleDateString("nl-NL", {
+              month: "short",
+            })}</div>
+          </div>
+        `;
 
         const card = document.createElement("div");
         card.className = "day-card" + (isToday ? " highlight" : "");
@@ -1354,15 +1462,15 @@
         const dayName = date.toLocaleDateString("nl-NL", { weekday: "long" });
 
         card.innerHTML = `
-        <div class="day-card-header">
-          <div class="day-card-title">${dayName}</div>
-          <div class="day-card-sub">${
-            list.length
-              ? list.length + " reservering(en)"
-              : "Geen reserveringen"
-          }</div>
-        </div>
-      `;
+          <div class="day-card-header">
+            <div class="day-card-title">${dayName}</div>
+            <div class="day-card-sub">${
+              list.length
+                ? list.length + " reservering(en)"
+                : "Geen reserveringen"
+            }</div>
+          </div>
+        `;
 
         if (list.length === 0) {
           card.innerHTML += `<div class="booking-empty">Nog geen reserveringen.</div>`;
@@ -1384,29 +1492,29 @@
                 });
 
               const car = allCars.find(
-                (c) => Number(c.id) === Number(b.carId),
+                (c) => Number(c.id) === Number(b.carId)
               );
               const plate = car ? car.license : `Auto #${b.carId}`;
               const carName = car ? car.name : "";
 
               card.innerHTML += `
-              <div class="booking-item">
-                <div class="booking-label">
-                  ${b.userName}${b.note ? " – " + b.note : ""}
-                  <br/>
-                  <span class="plate small">${plate}</span>
-                  ${
-                    carName
-                      ? `<span class="car-name-small">${carName}</span>`
-                      : ""
-                  }
+                <div class="booking-item">
+                  <div class="booking-label">
+                    ${b.userName}${b.note ? " – " + b.note : ""}
+                    <br/>
+                    <span class="plate small">${plate}</span>
+                    ${
+                      carName
+                        ? `<span class="car-name-small">${carName}</span>`
+                        : ""
+                    }
+                  </div>
+                  <div class="booking-time">
+                    ${range}
+                    <button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>
+                  </div>
                 </div>
-                <div class="booking-time">
-                  ${range}
-                  <button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>
-                </div>
-              </div>
-            `;
+              `;
 
               if (isToday && todayChip === "Geen ritten") todayChip = range;
             });
