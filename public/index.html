@@ -1363,69 +1363,91 @@
 
     // -------- AUTO AVAILABILITY (voor boekingen) --------
 
-    async function updateCarAvailability() {
-      if (!currentOrgId) return;
-      const date = formDateInput.value;
-      const s = startTimeInput.value;
-      const e = endTimeInput.value;
+async function updateCarAvailability() {
+  if (!currentOrgId) return;
 
-      let url;
+  const date = formDateInput.value;
+  const s = startTimeInput.value;
+  const e = endTimeInput.value;
 
-      // Zonder complete datum/tijd: gewoon alle auto's
-      if (!date || !s || !e) {
-        url = API_BASE + "/api/cars";
-      } else {
-        const start = new Date(date + "T" + s);
-        const end = new Date(date + "T" + e);
+  // onthoud huidige selectie (voordat we de options opnieuw opbouwen)
+  const previouslySelected = carSelect.value ? String(carSelect.value) : "";
 
-        const params = new URLSearchParams({
-          orgId: currentOrgId,
-          start: start.toISOString(),
-          end: end.toISOString(),
-        });
+  let url;
 
-        url = API_BASE + "/api/cars/availability?" + params.toString();
+  // Zonder complete datum/tijd: gewoon alle auto's
+  if (!date || !s || !e) {
+    url = API_BASE + "/api/cars";
+  } else {
+    const start = new Date(date + "T" + s);
+    const end = new Date(date + "T" + e);
+
+    const params = new URLSearchParams({
+      orgId: currentOrgId,
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
+
+    url = API_BASE + "/api/cars/availability?" + params.toString();
+  }
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // allCars bijwerken (voor gebruik in overzicht)
+    allCars = (data || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      license: c.license,
+    }));
+
+    carSelect.innerHTML = `<option value="">Kies een auto…</option>`;
+
+    let firstAvailable = "";
+    let canKeepPrevious = false;
+
+    (data || []).forEach((car) => {
+      const available = car.available !== false; // bij /api/cars ontbreekt 'available' → treat as true
+      const idStr = String(car.id);
+
+      const opt = document.createElement("option");
+      opt.value = idStr;
+      opt.textContent =
+        `${car.license} – ${car.name}` + (available ? "" : " (niet beschikbaar)");
+
+      if (!available) opt.disabled = true;
+
+      if (!firstAvailable && available) firstAvailable = idStr;
+      if (previouslySelected && idStr === previouslySelected && available) {
+        canKeepPrevious = true;
       }
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
+      carSelect.appendChild(opt);
+    });
 
-        // allCars bijwerken (voor gebruik in overzicht)
-        allCars = (data || []).map((c) => ({
-          id: c.id,
-          name: c.name,
-          license: c.license,
-        }));
-
-        carSelect.innerHTML = `<option value="">Kies een auto…</option>`;
-        let firstAvailable = null;
-
-        (data || []).forEach((car) => {
-          const available = car.available !== false; // bij /api/cars is 'available' niet gezet → treat as true
-          const opt = document.createElement("option");
-          opt.value = car.id;
-          opt.textContent =
-            `${car.license} – ${car.name}` +
-            (available ? "" : " (niet beschikbaar)");
-          if (!available) opt.disabled = true;
-          if (available && firstAvailable === null) firstAvailable = car.id;
-          carSelect.appendChild(opt);
-        });
-
-        if (firstAvailable !== null) {
-          carSelect.value = String(firstAvailable);
-          carAvailabilityHint.textContent =
-            "Auto’s die 'niet beschikbaar' zijn, kun je niet kiezen.";
-        } else {
-          carAvailabilityHint.textContent =
-            "Geen auto beschikbaar voor deze periode.";
-        }
-      } catch (err) {
-        console.error("Fout bij laden auto's:", err);
-        carAvailabilityHint.textContent = "Kon auto's niet laden.";
-      }
+    // ✅ behoud selectie als het kan, anders pak eerste beschikbare
+    if (canKeepPrevious) {
+      carSelect.value = previouslySelected;
+      carAvailabilityHint.textContent =
+        "Auto’s die 'niet beschikbaar' zijn, kun je niet kiezen.";
+    } else if (firstAvailable) {
+      carSelect.value = firstAvailable;
+      carAvailabilityHint.textContent =
+        previouslySelected
+          ? "Gekozen auto is niet beschikbaar voor deze periode. Een andere auto is geselecteerd."
+          : "Auto’s die 'niet beschikbaar' zijn, kun je niet kiezen.";
+    } else {
+      carSelect.value = "";
+      carAvailabilityHint.textContent =
+        "Geen auto beschikbaar voor deze periode.";
     }
+  } catch (err) {
+    console.error("Fout bij laden auto's:", err);
+    carAvailabilityHint.textContent = "Kon auto's niet laden.";
+  }
+}
+
 
     // -------- WEEK RENDER --------
 
@@ -1666,7 +1688,6 @@
       }
 
       showMessage("Reservering opgeslagen ✔️", "success");
-      localStorage.setItem("poolauto_userName", userName);
 
       await renderWeek();
       setTimeout(closeSheet, 500);
@@ -1719,14 +1740,17 @@
     });
 
     tabAdd.addEventListener("click", () => {
-      formDateInput.value = isoDate(new Date());
-      startTimeInput.value = "";
-      endTimeInput.value = "";
-      carSelect.innerHTML = "<option value=''>Kies een auto…</option>";
-      carAvailabilityHint.textContent = "";
-      openSheet();
-      updateCarAvailability(); // meteen auto-lijst tonen
-    });
+  userNameInput.value = "";     // ✅ altijd leeg starten
+  noteInput.value = "";         // (optioneel) ook leeg
+  formDateInput.value = isoDate(new Date());
+  startTimeInput.value = "";
+  endTimeInput.value = "";
+  carSelect.innerHTML = "<option value=''>Kies een auto…</option>";
+  carAvailabilityHint.textContent = "";
+  openSheet();
+  updateCarAvailability();
+});
+
 
     function openSheet() {
       bottomSheet.classList.add("open");
@@ -1743,9 +1767,6 @@
 
     async function initApp() {
       updateHeaderToday();
-
-      const savedName = localStorage.getItem("poolauto_userName");
-      if (savedName) userNameInput.value = savedName;
 
       // start altijd vanuit deze week
       currentWeekAnchor = new Date();
