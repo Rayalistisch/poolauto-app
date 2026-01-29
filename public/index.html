@@ -533,77 +533,10 @@
     }
     .bottom-sheet { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
   }
-
-  /* ===============================
-     PRELOADER
-  ================================ */
-  .preloader{
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #e56a54, #f27761, #f29281);
-    transition: opacity .22s ease, visibility .22s ease;
-    opacity: 1;
-    visibility: visible;
-  }
-  .preloader--hide{
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .preloader__inner{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 18px;
-    text-align: center;
-  }
-  .preloader__logo{
-    width: 74px;
-    height: 74px;
-    border-radius: 18px;
-    background: rgba(255,255,255,.18);
-    padding: 10px;
-    box-shadow: 0 14px 40px rgba(15,23,42,.25);
-  }
-  .preloader__spinner{
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    border: 3px solid rgba(255,255,255,.35);
-    border-top-color: rgba(255,255,255,.95);
-    animation: preloaderSpin .9s linear infinite;
-  }
-  .preloader__text{
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .02em;
-    color: rgba(255,255,255,.95);
-  }
-  @keyframes preloaderSpin{
-    to { transform: rotate(360deg); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .preloader__spinner{ animation: none; }
-    .preloader{ transition: none; }
-  }
   </style>
 </head>
 
 <body>
-
-  <!-- PRELOADER -->
-  <div id="preloader" class="preloader" aria-hidden="false">
-    <div class="preloader__inner">
-      <img src="/icon-192.png" alt="Poolauto planner" class="preloader__logo" />
-      <div class="preloader__spinner" aria-hidden="true"></div>
-      <div class="preloader__text">Laden…</div>
-    </div>
-  </div>
-
   <div class="app">
     <!-- LOGIN SCHERM -->
     <section id="loginScreen" class="login-screen">
@@ -802,20 +735,6 @@
   // Werkt op localhost én Render
   const API_BASE = "";
 
-  // -------- PRELOADER --------
-  const preloaderEl = document.getElementById("preloader");
-  let preloaderHidden = false;
-
-  function hidePreloader() {
-    if (!preloaderEl || preloaderHidden) return;
-    preloaderHidden = true;
-    requestAnimationFrame(() => {
-      preloaderEl.classList.add("preloader--hide");
-      preloaderEl.setAttribute("aria-hidden", "true");
-    });
-  }
-  setTimeout(hidePreloader, 4500);
-
   // --- ORGANISATIE STATE ---
   let currentOrgId = localStorage.getItem("poolauto_orgId");
   let currentOrgName = localStorage.getItem("poolauto_orgName");
@@ -823,7 +742,7 @@
 
   // Extra beschikbare auto's (medewerkers)
   let extraCarsToday = [];
-  let preferredExtraCarId = null;
+  let preferredExtraCarId = null; // (optioneel) laatst gekozen extra auto
 
   // LOGIN ELEMENTEN
   const loginScreen = document.getElementById("loginScreen");
@@ -841,9 +760,9 @@
   const headerDateText = document.getElementById("headerDateText");
   const headerOrgNameEl = document.getElementById("headerOrgName");
 
-  // Header dropdown
+  // Header dropdown (jij hebt deze id in HTML)
   const todayCarsSelect = document.getElementById("todayCarsSelect");
-  const todayCarsHint = document.getElementById("todayCarsHint"); // bestaat niet in HTML, maar veilig
+  const todayCarsHint = document.getElementById("todayCarsHint");
 
   const prevWeekBtn = document.getElementById("prevWeekBtn");
   const nextWeekBtn = document.getElementById("nextWeekBtn");
@@ -879,6 +798,7 @@
   let currentWeekAnchor = new Date();
 
   // -------- UTILITIES --------
+
   function isoDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -889,7 +809,7 @@
   function startOfWeek(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = (day + 6) % 7; // maandag = 0
+    const diff = (day + 6) % 7;
     d.setDate(d.getDate() - diff);
     d.setHours(0, 0, 0, 0);
     return d;
@@ -909,12 +829,6 @@
     });
   }
 
-  function formatNLRange(fromDate, toDate) {
-    const from = fromDate.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-    const to = toDate.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-    return `${from} – ${to}`;
-  }
-
   function showMessage(text, type) {
     if (!text) {
       messageDiv.innerHTML = "";
@@ -929,71 +843,20 @@
     headerOrgNameEl.textContent = currentOrgName || "";
   }
 
-  function parseTimeToMinutes(t) {
-    if (!t || typeof t !== "string" || !t.includes(":")) return NaN;
-    const [hh, mm] = t.split(":").map((x) => Number(x));
-    return hh * 60 + mm;
-  }
-
-  function overlaps(aStartMin, aEndMin, bStartMin, bEndMin) {
-    // overlap als start < end en ranges kruisen
-    if ([aStartMin, aEndMin, bStartMin, bEndMin].some((x) => Number.isNaN(x))) return false;
-    return aStartMin < bEndMin && bStartMin < aEndMin;
-  }
-
-  function isToday(dateStr) {
-    return dateStr === isoDate(new Date());
-  }
-
-  // -------- API HELPERS --------
-  async function apiGet(path, params) {
-    const url = new URL(API_BASE + path, window.location.origin);
-    if (params) Object.keys(params).forEach((k) => url.searchParams.set(k, params[k]));
-    const res = await fetch(url.toString());
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.error || `GET ${path} mislukt`);
-    return data;
-  }
-
-  async function apiPost(path, body) {
-    const res = await fetch(API_BASE + path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || {}),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.error || `POST ${path} mislukt`);
-    return data;
-  }
-
-  async function apiPut(path, body) {
-    const res = await fetch(API_BASE + path, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || {}),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.error || `PUT ${path} mislukt`);
-    return data;
-  }
-
-  async function apiDelete(path) {
-    const res = await fetch(API_BASE + path, { method: "DELETE" });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(data?.error || `DELETE ${path} mislukt`);
-    return data;
-  }
-
   // -------- DATA FETCH --------
+
   async function fetchBookingsForDate(dateStr) {
     if (!currentOrgId) return [];
-    return await apiGet("/api/bookings", { date: dateStr, orgId: currentOrgId });
+    const params = new URLSearchParams({ date: dateStr, orgId: currentOrgId });
+    const res = await fetch(API_BASE + "/api/bookings?" + params.toString());
+    return await res.json();
   }
 
   async function ensureCarsLoaded() {
     if (allCars.length) return;
     try {
-      const data = await apiGet("/api/cars");
+      const res = await fetch(API_BASE + "/api/cars");
+      const data = await res.json();
       allCars = (data || []).map((c) => ({ id: c.id, name: c.name, license: c.license }));
     } catch (err) {
       console.error("Kon auto's niet laden:", err);
@@ -1002,10 +865,14 @@
   }
 
   // -------- EXTRA AUTO'S (header dropdown) --------
+
   async function fetchExtraCarsToday() {
     if (!currentOrgId) return [];
     const today = isoDate(new Date());
-    const data = await apiGet("/api/extra-cars", { orgId: currentOrgId, date: today });
+    const params = new URLSearchParams({ orgId: currentOrgId, date: today });
+    const res = await fetch(API_BASE + "/api/extra-cars?" + params.toString());
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Kon extra auto's niet ophalen");
     return Array.isArray(data) ? data : [];
   }
 
@@ -1018,6 +885,7 @@
     try {
       extraCarsToday = await fetchExtraCarsToday();
 
+      // Basis placeholder
       todayCarsSelect.innerHTML = `<option value="">Extra auto's</option>`;
 
       if (extraCarsToday.length) {
@@ -1032,16 +900,19 @@
         if (todayCarsHint) todayCarsHint.textContent = "Nog geen extra auto’s beschikbaar vandaag.";
       }
 
+      // Divider
       const div = document.createElement("option");
       div.disabled = true;
       div.textContent = "────────────";
       todayCarsSelect.appendChild(div);
 
+      // Action
       const addOpt = document.createElement("option");
       addOpt.value = "__add_extra__";
       addOpt.textContent = "➕ Eigen auto beschikbaar stellen…";
       todayCarsSelect.appendChild(addOpt);
 
+      // Herstel selectie indien nog geldig
       if (preferredExtraCarId) {
         const key = `extra-${preferredExtraCarId}`;
         const exists = Array.from(todayCarsSelect.options).some((o) => o.value === key);
@@ -1054,21 +925,25 @@
     }
   }
 
+  // ✅ Accordion helpers
   function setExtraCarPanelOpen(open) {
     const panel = document.getElementById("extraCarPanel");
     const chev = document.getElementById("extraCarChevron");
     if (!panel || !chev) return;
+
     panel.classList.toggle("hidden", !open);
     chev.textContent = open ? "▴" : "▾";
   }
 
   function ensureExtraCarFormExists() {
+    // Injecteer 1x een extra-car formulier onder bookingForm
     if (document.getElementById("extraCarForm")) return;
 
     const wrap = document.createElement("div");
     wrap.id = "extraCarWrap";
     wrap.style.marginTop = "14px";
 
+    // ✅ standaard ingeklapt (panel hidden)
     wrap.innerHTML = `
       <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
         <button id="extraCarToggle" type="button"
@@ -1105,6 +980,7 @@
 
     bookingForm.insertAdjacentElement("afterend", wrap);
 
+    // toggle handler
     const toggleBtn = document.getElementById("extraCarToggle");
     toggleBtn.addEventListener("click", () => {
       const panel = document.getElementById("extraCarPanel");
@@ -1112,9 +988,11 @@
       setExtraCarPanelOpen(!isOpen);
     });
 
+    // default datum = vandaag
     const dateEl = document.getElementById("extraCarDate");
     if (dateEl) dateEl.value = isoDate(new Date());
 
+    // submit handler
     const form = document.getElementById("extraCarForm");
     const msg = document.getElementById("extraCarMsg");
 
@@ -1136,28 +1014,42 @@
       msg.textContent = "Opslaan…";
 
       try {
-        const data = await apiPost("/api/extra-cars", {
-          orgId: Number(currentOrgId),
-          license,
-          name,
-          date,
+        const res = await fetch(API_BASE + "/api/extra-cars", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orgId: Number(currentOrgId),
+            license,
+            name,
+            date,
+          }),
         });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg.className = "message error";
+          msg.textContent = data?.error || "Kon extra auto niet opslaan.";
+          return;
+        }
 
         msg.className = "message success";
         msg.textContent = "Extra auto toegevoegd ✔️";
 
+        // refresh dropdown + selecteer deze auto
         await renderTodayExtraCarsDropdown();
         if (data?.id) {
           preferredExtraCarId = data.id;
           todayCarsSelect.value = `extra-${data.id}`;
         }
 
+        // formulier leeg (datum laten staan)
         document.getElementById("extraCarLicense").value = "";
         document.getElementById("extraCarName").value = "";
       } catch (err) {
         console.error(err);
         msg.className = "message error";
-        msg.textContent = err?.message || "Er ging iets mis bij opslaan.";
+        msg.textContent = "Er ging iets mis bij opslaan.";
       }
     });
   }
@@ -1167,11 +1059,13 @@
       const v = todayCarsSelect.value;
 
       if (v === "__add_extra__") {
+        // ✅ open sheet + inject + klap accordion open
         openSheet();
         ensureExtraCarFormExists();
 
         setTimeout(() => {
           setExtraCarPanelOpen(true);
+
           const el = document.getElementById("extraCarLicense");
           if (el) el.focus();
 
@@ -1179,10 +1073,12 @@
           if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 60);
 
+        // reset dropdown terug naar placeholder
         todayCarsSelect.value = "";
         return;
       }
 
+      // onthoud keuze (optioneel)
       if (String(v).startsWith("extra-")) {
         preferredExtraCarId = Number(String(v).replace("extra-", ""));
         if (todayCarsHint) todayCarsHint.textContent = "Geselecteerd (extra auto).";
@@ -1193,18 +1089,10 @@
   }
 
   // -------- AUTO BEHEER (vaste poolauto's) --------
-  async function fetchCars() {
-    return await apiGet("/api/cars");
-  }
 
-  function dateInRange(iso, fromIso, untilIso) {
-    if (!iso) return false;
-    const d = new Date(iso + "T00:00:00");
-    const from = fromIso ? new Date(String(fromIso).slice(0, 10) + "T00:00:00") : null;
-    const until = untilIso ? new Date(String(untilIso).slice(0, 10) + "T23:59:59") : null;
-    if (from && d < from) return false;
-    if (until && d > until) return false;
-    return true;
+  async function fetchCars() {
+    const res = await fetch(API_BASE + "/api/cars");
+    return await res.json();
   }
 
   async function renderCars() {
@@ -1222,6 +1110,7 @@
         card.className = "car-card";
 
         const statusLabel = car.status === "garage" ? "Garage / niet beschikbaar" : "Beschikbaar";
+
         const fromVal = car.unavailableFrom ? String(car.unavailableFrom).slice(0, 10) : "";
         const untilVal = car.unavailableUntil ? String(car.unavailableUntil).slice(0, 10) : "";
 
@@ -1235,433 +1124,310 @@
               ${statusLabel}
             </div>
           </div>
-
           <div class="car-body">
             <div class="car-status-row">
-              <label style="display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-main);">
+              <label>
                 <input type="radio" name="status-${car.id}" value="ok" ${car.status !== "garage" ? "checked" : ""}>
                 Beschikbaar
               </label>
-              <label style="display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-main);">
+              <label>
                 <input type="radio" name="status-${car.id}" value="garage" ${car.status === "garage" ? "checked" : ""}>
-                Garage
+                Garage / niet beschikbaar
               </label>
             </div>
-
             <div class="car-dates-row">
               <div>
-                <label for="from-${car.id}">Van (optioneel)</label>
-                <input id="from-${car.id}" type="date" value="${fromVal}">
+                <label>Van</label>
+                <input type="date" class="car-from" value="${fromVal}">
               </div>
               <div>
-                <label for="until-${car.id}">Tot (optioneel)</label>
-                <input id="until-${car.id}" type="date" value="${untilVal}">
+                <label>Tot en met</label>
+                <input type="date" class="car-until" value="${untilVal}">
               </div>
             </div>
-
-            <button class="car-save-btn" type="button" data-car-id="${car.id}">Opslaan</button>
-            <div id="car-msg-${car.id}" class="car-message"></div>
+            <button class="car-save-btn" type="button">Opslaan</button>
+            <div class="car-message"></div>
           </div>
         `;
 
-        carsContainer.appendChild(card);
-
         const saveBtn = card.querySelector(".car-save-btn");
+        const msgEl = card.querySelector(".car-message");
+        const fromInput = card.querySelector(".car-from");
+        const untilInput = card.querySelector(".car-until");
+        const statusInputs = card.querySelectorAll(`input[name="status-${car.id}"]`);
+
+        function showCarMsg(text, type) {
+          msgEl.textContent = text;
+          msgEl.className = "car-message" + (type ? " " + type : "");
+        }
+
         saveBtn.addEventListener("click", async () => {
-          const msgEl = document.getElementById(`car-msg-${car.id}`);
-          msgEl.className = "car-message";
-          msgEl.textContent = "Opslaan…";
+          const selectedStatus = Array.from(statusInputs).find((i) => i.checked)?.value || "ok";
+          const from = fromInput.value || null;
+          const until = untilInput.value || null;
 
-          const status = card.querySelector(`input[name="status-${car.id}"]:checked`)?.value || "ok";
-          const from = card.querySelector(`#from-${car.id}`)?.value || "";
-          const until = card.querySelector(`#until-${car.id}`)?.value || "";
-
-          // simpele validatie
-          if (status === "garage" && from && until && from > until) {
-            msgEl.className = "car-message error";
-            msgEl.textContent = "‘Van’ mag niet na ‘Tot’ zijn.";
-            return;
-          }
+          showCarMsg("Opslaan...", "loading");
 
           try {
-            await apiPut(`/api/cars/${car.id}`, {
-              status,
-              unavailableFrom: from || null,
-              unavailableUntil: until || null,
+            const res = await fetch(API_BASE + "/api/cars/" + car.id, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: selectedStatus, unavailableFrom: from, unavailableUntil: until }),
             });
 
-            msgEl.className = "car-message success";
-            msgEl.textContent = "Opgeslagen ✔️";
+            const data = await res.json();
 
-            // refresh alles (incl. beschikbaarheid in booken)
-            await ensureCarsLoaded();
-            await renderCars();
-            await renderWeek();
-          } catch (e) {
-            msgEl.className = "car-message error";
-            msgEl.textContent = e?.message || "Kon niet opslaan.";
+            if (!res.ok) {
+              showCarMsg(data.error || "Kon auto niet bijwerken.", "error");
+              return;
+            }
+
+            showCarMsg("Opgeslagen ✔️", "success");
+            setTimeout(renderCars, 400);
+            allCars = [];
+            ensureCarsLoaded();
+          } catch (err) {
+            console.error("Fout bij updaten auto:", err);
+            showCarMsg("Er ging iets mis bij opslaan.", "error");
           }
         });
+
+        carsContainer.appendChild(card);
       });
     } catch (err) {
-      console.error(err);
+      console.error("Fout bij ophalen auto's:", err);
       carsContainer.innerHTML = '<p class="car-empty">Kon auto&#39;s niet laden.</p>';
     }
   }
 
-  // -------- WEEK OVERVIEW --------
+  // -------- AUTO AVAILABILITY (poolauto's voor boekingen) --------
+
+async function updateCarAvailability() {
+  if (!currentOrgId) return;
+
+  const date = formDateInput.value;
+  const s = startTimeInput.value;
+  const e = endTimeInput.value;
+
+  // ❗ ZONDER datum + tijden: GEEN availability check
+  if (!date || !s || !e) {
+    try {
+      const res = await fetch(API_BASE + "/api/cars");
+      const data = await res.json();
+
+      carSelect.innerHTML = `<option value="">Kies een auto…</option>`;
+
+      (data || []).forEach((car) => {
+        const opt = document.createElement("option");
+        opt.value = String(car.id);
+        opt.textContent = `${car.license} – ${car.name}`;
+        carSelect.appendChild(opt);
+      });
+
+      carAvailabilityHint.textContent =
+        "Kies datum + tijden om beschikbaarheid te controleren.";
+    } catch (err) {
+      console.error(err);
+      carAvailabilityHint.textContent = "Kon auto's niet laden.";
+    }
+
+    return;
+  }
+
+  // ✅ PAS NU availability checken
+  const startIso = new Date(date + "T" + s).toISOString();
+  const endIso = new Date(date + "T" + e).toISOString();
+
+  const params = new URLSearchParams({
+    orgId: currentOrgId,
+    start: startIso,
+    end: endIso,
+  });
+
+  try {
+    const res = await fetch(API_BASE + "/api/cars/availability?" + params.toString());
+    const data = await res.json();
+
+    carSelect.innerHTML = `<option value="">Kies een auto…</option>`;
+
+    let firstAvailable = "";
+
+    (data || []).forEach((car) => {
+      const available = car.available !== false;
+      const value = car.type === "extra" ? `extra-${car.id}` : String(car.id);
+
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent =
+        `${car.type === "extra" ? "Extra: " : ""}${car.license} – ${car.name}` +
+        (available ? "" : " (niet beschikbaar)");
+
+      if (!available) opt.disabled = true;
+      if (!firstAvailable && available) firstAvailable = value;
+
+      carSelect.appendChild(opt);
+    });
+
+    if (!firstAvailable) {
+      carAvailabilityHint.textContent = "Geen auto beschikbaar voor deze periode.";
+    } else {
+      carAvailabilityHint.textContent = "Beschikbaarheid gecontroleerd.";
+    }
+  } catch (err) {
+    console.error(err);
+    carAvailabilityHint.textContent = "Kon beschikbaarheid niet laden.";
+  }
+}
+
+function injectExtraCarsIntoBookingSelect() {
+  if (!Array.isArray(extraCarsToday) || !extraCarsToday.length) return;
+
+  // Divider
+  const divider = document.createElement("option");
+  divider.disabled = true;
+  divider.textContent = "──────── Extra auto’s ────────";
+  carSelect.appendChild(divider);
+
+  extraCarsToday.forEach((car) => {
+    const opt = document.createElement("option");
+    opt.value = `extra-${car.id}`;
+    opt.textContent = `Extra: ${car.license}${car.name ? " – " + car.name : ""}`;
+    carSelect.appendChild(opt);
+  });
+}
+
+
+  // -------- WEEK RENDER --------
+
   async function renderWeek() {
     if (!currentOrgId) return;
 
-    const weekStart = startOfWeek(currentWeekAnchor);
-    const weekEnd = addDays(weekStart, 6);
+    await ensureCarsLoaded();
 
-    weekTitle.textContent = formatNLRange(weekStart, weekEnd);
+    const monday = startOfWeek(currentWeekAnchor);
+    const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+
+    weekTitle.textContent =
+      `Week ${days[0].toLocaleDateString("nl-NL", { day: "2-digit", month: "short" })} – ` +
+      `${days[6].toLocaleDateString("nl-NL", { day: "2-digit", month: "short" })}`;
+
+    const bookingsPerDay = await Promise.all(days.map((d) => fetchBookingsForDate(isoDate(d))));
+
     daysContainer.innerHTML = "";
+    const today = isoDate(new Date());
 
-    // preload cars (voor garage ranges in UI hints)
-    let carsRaw = [];
-    try { carsRaw = await fetchCars(); } catch (_) {}
-
-    for (let i = 0; i < 7; i++) {
-      const dayDate = addDays(weekStart, i);
-      const dateStr = isoDate(dayDate);
+    days.forEach((date, idx) => {
+      const list = bookingsPerDay[idx] || [];
+      const isToday = isoDate(date) === today;
 
       const row = document.createElement("div");
       row.className = "day-row";
 
-      const left = document.createElement("div");
-      left.className = "day-date-column";
-      left.innerHTML = `
-        <div class="day-date-number">${dayDate.getDate()}</div>
-        <div class="day-date-month">${dayDate.toLocaleDateString("nl-NL", { month: "short" })}</div>
+      row.innerHTML = `
+        <div class="day-date-column">
+          <div class="day-date-number">${date.getDate()}</div>
+          <div class="day-date-month">${date.toLocaleDateString("nl-NL", { month: "short" })}</div>
+        </div>
       `;
 
       const card = document.createElement("div");
-      card.className = "day-card" + (isToday(dateStr) ? " highlight" : "");
+      card.className = "day-card" + (isToday ? " highlight" : "");
+
+      const dayName = date.toLocaleDateString("nl-NL", { weekday: "long" });
 
       card.innerHTML = `
         <div class="day-card-header">
-          <div>
-            <div class="day-card-title">${dayDate.toLocaleDateString("nl-NL", { weekday: "long" })}</div>
-            <div class="day-card-sub">${dateStr}</div>
-          </div>
-        </div>
-        <div class="day-bookings" id="bookings-${dateStr}">
-          <div class="booking-empty">Laden…</div>
+          <div class="day-card-title">${dayName}</div>
+          <div class="day-card-sub">${list.length ? list.length + " reservering(en)" : "Geen reserveringen"}</div>
         </div>
       `;
 
-      row.appendChild(left);
-      row.appendChild(card);
-      daysContainer.appendChild(row);
+      if (list.length === 0) {
+        card.innerHTML += `<div class="booking-empty">Nog geen reserveringen.</div>`;
+      } else {
+        list
+          .sort((a, b) => new Date(a.start) - new Date(b.start))
+          .forEach((b) => {
+            const s = new Date(b.start);
+            const e = new Date(b.end);
 
-      // load bookings per dag
-      try {
-        const bookings = await fetchBookingsForDate(dateStr);
-        const box = document.getElementById(`bookings-${dateStr}`);
-        box.innerHTML = "";
+            const range =
+              s.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) +
+              " – " +
+              e.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 
-        if (!bookings || bookings.length === 0) {
-          box.innerHTML = `<div class="booking-empty">Geen reserveringen</div>`;
-        } else {
-          // sort op starttijd
-          bookings.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+            const car = allCars.find((c) => Number(c.id) === Number(b.carId));
+            const plate = car ? car.license : `Auto #${b.carId}`;
+            const carName = car ? car.name : "";
 
-          bookings.forEach((b) => {
-            const item = document.createElement("div");
-            item.className = "booking-item";
-
-            const carText = b.carLicense
-              ? `<span class="plate small">${b.carLicense}</span><span class="car-name-small">${b.carName || ""}</span>`
-              : (b.carName || "Auto");
-
-            item.innerHTML = `
-              <div class="booking-label">
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                  <strong>${b.userName || "Onbekend"}</strong>
-                  <span style="opacity:.9;">${carText}</span>
+            card.innerHTML += `
+              <div class="booking-item">
+                <div class="booking-label">
+                  ${b.userName}${b.note ? " – " + b.note : ""}
+                  <br/>
+                  <span class="plate small">${plate}</span>
+                  ${carName ? `<span class="car-name-small">${carName}</span>` : ""}
                 </div>
-                ${b.note ? `<div style="margin-top:3px; font-size:11px; color:inherit; opacity:.85;">${b.note}</div>` : ""}
-              </div>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <div class="booking-time">${b.startTime}–${b.endTime}</div>
-                <button class="booking-delete-btn" title="Verwijderen" aria-label="Verwijderen">✕</button>
+                <div class="booking-time">
+                  ${range}
+                  <button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>
+                </div>
               </div>
             `;
-
-            const delBtn = item.querySelector(".booking-delete-btn");
-            delBtn.addEventListener("click", async () => {
-              if (!confirm("Reservering verwijderen?")) return;
-              try {
-                await apiDelete(`/api/bookings/${b.id}`);
-                await renderWeek();
-              } catch (e) {
-                alert(e?.message || "Kon niet verwijderen.");
-              }
-            });
-
-            box.appendChild(item);
           });
-        }
-
-        // (optioneel) toon garage hint in de dagkaart als er auto’s in garage zijn die dag
-        const inGarage = (carsRaw || []).filter((c) => {
-          if (c.status !== "garage") return false;
-          const fromIso = c.unavailableFrom ? String(c.unavailableFrom).slice(0, 10) : "";
-          const untilIso = c.unavailableUntil ? String(c.unavailableUntil).slice(0, 10) : "";
-          // als geen dates: altijd in garage
-          if (!fromIso && !untilIso) return true;
-          return dateInRange(dateStr, fromIso, untilIso);
-        });
-
-        if (inGarage.length) {
-          const sub = card.querySelector(".day-card-sub");
-          if (sub) {
-            const txt = inGarage.slice(0, 2).map((c) => c.license).join(", ");
-            const more = inGarage.length > 2 ? ` +${inGarage.length - 2}` : "";
-            sub.textContent = `${dateStr} • Garage: ${txt}${more}`;
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        const box = document.getElementById(`bookings-${dateStr}`);
-        if (box) box.innerHTML = `<div class="booking-empty">Kon niet laden</div>`;
-      }
-    }
-  }
-
-  // -------- BOTTOM SHEET --------
-  function openSheet() {
-    bottomSheet.classList.add("open");
-    sheetOverlay.classList.add("visible");
-    showMessage("", "");
-    // voorkom scroll onder sheet
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeSheet() {
-    bottomSheet.classList.remove("open");
-    sheetOverlay.classList.remove("visible");
-    showMessage("", "");
-    document.body.style.overflow = "";
-  }
-
-  sheetOverlay.addEventListener("click", closeSheet);
-  sheetCloseBtn.addEventListener("click", closeSheet);
-
-  // -------- BOOKING FORM: beschikbaarheid + opslaan --------
-  async function populateCarSelectForForm() {
-    await ensureCarsLoaded();
-
-    const date = formDateInput.value;
-    const startT = startTimeInput.value;
-    const endT = endTimeInput.value;
-
-    carSelect.innerHTML = `<option value="">Selecteer een auto…</option>`;
-    carAvailabilityHint.textContent = "";
-
-    if (!date || !startT || !endT) return;
-
-    const startMin = parseTimeToMinutes(startT);
-    const endMin = parseTimeToMinutes(endT);
-
-    if (!(startMin < endMin)) {
-      carAvailabilityHint.textContent = "Start moet vóór einde liggen.";
-      return;
-    }
-
-    // haal reserveringen op voor die dag
-    let bookings = [];
-    try {
-      bookings = await fetchBookingsForDate(date);
-    } catch (_) {
-      bookings = [];
-    }
-
-    // haal car status (garage ranges)
-    let carsRaw = [];
-    try { carsRaw = await fetchCars(); } catch (_) {}
-
-    // filter beschikbare auto's
-    const availableCars = (carsRaw || []).filter((car) => {
-      // garage blok
-      if (car.status === "garage") {
-        const fromIso = car.unavailableFrom ? String(car.unavailableFrom).slice(0, 10) : "";
-        const untilIso = car.unavailableUntil ? String(car.unavailableUntil).slice(0, 10) : "";
-        // geen data = altijd onbeschikbaar
-        if (!fromIso && !untilIso) return false;
-        // als binnen range => onbeschikbaar
-        if (dateInRange(date, fromIso, untilIso)) return false;
       }
 
-      // check overlap reserveringen voor deze auto
-      const carBookings = (bookings || []).filter((b) => String(b.carId) === String(car.id));
-      const conflict = carBookings.some((b) => {
-        const bStart = parseTimeToMinutes(b.startTime);
-        const bEnd = parseTimeToMinutes(b.endTime);
-        return overlaps(startMin, endMin, bStart, bEnd);
-      });
-
-      return !conflict;
+      row.appendChild(card);
+      daysContainer.appendChild(row);
     });
-
-    if (!availableCars.length) {
-      carAvailabilityHint.textContent = "Geen auto's beschikbaar in deze periode.";
-      return;
-    }
-
-    availableCars.forEach((car) => {
-      const opt = document.createElement("option");
-      opt.value = String(car.id);
-      opt.textContent = `${car.license} – ${car.name}`;
-      carSelect.appendChild(opt);
-    });
-
-    carAvailabilityHint.textContent = `${availableCars.length} auto(’s) beschikbaar.`;
   }
 
-  formDateInput.addEventListener("change", populateCarSelectForForm);
-  startTimeInput.addEventListener("change", populateCarSelectForForm);
-  endTimeInput.addEventListener("change", populateCarSelectForForm);
+  // -------- DELETE BOOKING --------
 
-  bookingForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showMessage("", "");
+  async function deleteBooking(id) {
+    if (!confirm("Weet je zeker dat je deze reservering wilt verwijderen?")) return;
 
-    const userName = userNameInput.value.trim();
-    const date = formDateInput.value;
-    const startTime = startTimeInput.value;
-    const endTime = endTimeInput.value;
-    const note = noteInput.value.trim();
-    const carId = carSelect.value;
+    const res = await fetch(API_BASE + "/api/bookings/" + id, { method: "DELETE" });
 
-    if (!userName || !date || !startTime || !endTime || !carId) {
-      showMessage("Vul alle verplichte velden in.", "error");
+    if (!res.ok) {
+      alert("Verwijderen mislukt.");
       return;
     }
 
-    const sMin = parseTimeToMinutes(startTime);
-    const eMin = parseTimeToMinutes(endTime);
-    if (!(sMin < eMin)) {
-      showMessage("Start moet vóór einde liggen.", "error");
-      return;
-    }
-
-    showMessage("Opslaan…", "");
-
-    try {
-      await apiPost("/api/bookings", {
-        orgId: Number(currentOrgId),
-        userName,
-        date,
-        startTime,
-        endTime,
-        carId: Number(carId),
-        note: note || null,
-      });
-
-      showMessage("Reservering opgeslagen ✔️", "success");
-
-      // refresh
-      await renderWeek();
-
-      // reset klein beetje
-      noteInput.value = "";
-      carSelect.value = "";
-
-      setTimeout(() => closeSheet(), 550);
-    } catch (err) {
-      showMessage(err?.message || "Kon reservering niet opslaan.", "error");
-    }
-  });
-
-  // -------- TABS --------
-  function setActiveTab(tab) {
-    // reset
-    [tabOverview, tabSearch, tabCars].forEach((b) => b.classList.remove("active"));
-    [overviewSection, searchSection, carsSection].forEach((s) => s.classList.add("hidden"));
-
-    if (tab === "overview") {
-      tabOverview.classList.add("active");
-      overviewSection.classList.remove("hidden");
-    } else if (tab === "search") {
-      tabSearch.classList.add("active");
-      searchSection.classList.remove("hidden");
-    } else if (tab === "cars") {
-      tabCars.classList.add("active");
-      carsSection.classList.remove("hidden");
-    }
+    await renderWeek();
   }
 
-  tabOverview.addEventListener("click", () => setActiveTab("overview"));
-  tabSearch.addEventListener("click", () => setActiveTab("search"));
-  tabCars.addEventListener("click", async () => {
-    setActiveTab("cars");
-    await renderCars();
-  });
-
-  tabAdd.addEventListener("click", async () => {
-    // open sheet + defaults
-    openSheet();
-
-    // defaults
-    const today = isoDate(new Date());
-    if (!formDateInput.value) formDateInput.value = today;
-
-    if (!startTimeInput.value) startTimeInput.value = "09:00";
-    if (!endTimeInput.value) endTimeInput.value = "17:00";
-
-    await populateCarSelectForForm();
-    setTimeout(() => userNameInput.focus(), 80);
-  });
-
-  // -------- WEEK NAV --------
-  prevWeekBtn.addEventListener("click", async () => {
-    currentWeekAnchor = addDays(currentWeekAnchor, -7);
-    await renderWeek();
-  });
-
-  nextWeekBtn.addEventListener("click", async () => {
-    currentWeekAnchor = addDays(currentWeekAnchor, 7);
-    await renderWeek();
-  });
-
-  todayWeekBtn.addEventListener("click", async () => {
-    currentWeekAnchor = new Date();
-    await renderWeek();
-  });
+  window.deleteBooking = deleteBooking;
 
   // -------- LOGIN / LOGOUT --------
-  async function doLogin(orgCode) {
-    // verwacht: { orgId, orgName }
-    const data = await apiPost("/api/login", { code: orgCode });
-
-    if (!data?.orgId) throw new Error("Geen orgId teruggekregen.");
-    currentOrgId = String(data.orgId);
-    currentOrgName = String(data.orgName || "");
-
-    localStorage.setItem("poolauto_orgId", currentOrgId);
-    localStorage.setItem("poolauto_orgName", currentOrgName);
-
-    return data;
-  }
-
-  function showApp() {
-    loginScreen.classList.add("hidden");
-    mainApp.classList.remove("hidden");
-    updateHeaderToday();
-  }
 
   function showLogin() {
-    mainApp.classList.add("hidden");
-    loginScreen.classList.remove("hidden");
+    loginScreen.style.display = "block";
+    mainApp.style.display = "none";
   }
+
+  function showMainApp() {
+    loginScreen.style.display = "none";
+    mainApp.style.display = "block";
+  }
+
+  function logout() {
+    localStorage.removeItem("poolauto_orgId");
+    localStorage.removeItem("poolauto_orgName");
+    currentOrgId = null;
+    currentOrgName = null;
+    allCars = [];
+    extraCarsToday = [];
+    preferredExtraCarId = null;
+    showLogin();
+  }
+
+  logoutBtn.addEventListener("click", logout);
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     loginMessage.textContent = "";
-    loginMessage.className = "login-message";
+    loginMessage.classList.remove("error");
 
     const code = orgCodeInput.value.trim();
     if (!code) {
@@ -1670,65 +1436,184 @@
       return;
     }
 
-    loginMessage.textContent = "Inloggen…";
+    const res = await fetch(API_BASE + "/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
 
-    try {
-      await doLogin(code);
-      loginMessage.textContent = "";
+    const data = await res.json();
 
-      showApp();
-      setActiveTab("overview");
-
-      // init data
-      currentWeekAnchor = new Date();
-      await ensureCarsLoaded();
-      await renderTodayExtraCarsDropdown();
-      await renderWeek();
-
-      hidePreloader();
-    } catch (err) {
-      loginMessage.textContent = err?.message || "Inloggen mislukt.";
+    if (!res.ok) {
+      loginMessage.textContent = data.error || "Ongeldige code.";
       loginMessage.classList.add("error");
-      hidePreloader();
+      return;
     }
+
+    currentOrgId = data.orgId;
+    currentOrgName = data.name;
+
+    localStorage.setItem("poolauto_orgId", currentOrgId);
+    localStorage.setItem("poolauto_orgName", currentOrgName);
+
+    showMainApp();
+    initApp();
   });
 
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("poolauto_orgId");
-    localStorage.removeItem("poolauto_orgName");
-    currentOrgId = null;
-    currentOrgName = null;
-    allCars = [];
-    extraCarsToday = [];
-    preferredExtraCarId = null;
+  // -------- FORM SUBMIT (booking) --------
+  // LET OP: jouw server.js vereist carId → extra-auto boeken doen we later als endpoint/data-model klaar is.
+bookingForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  showMessage("");
 
-    showLogin();
+  const userName = userNameInput.value.trim();
+  const date = formDateInput.value;
+  const s = startTimeInput.value;
+  const t = endTimeInput.value;
+  const note = noteInput.value.trim();
+  const selected = carSelect.value; // kan "12" of "extra-34" zijn
+
+  if (!date || !s || !t || !userName || !selected) {
+    showMessage("Vul alle velden in.", "error");
+    return;
+  }
+
+  const start = new Date(date + "T" + s);
+  const end = new Date(date + "T" + t);
+
+  const isExtra = String(selected).startsWith("extra-");
+  const payload = {
+    userName,
+    start: start.toISOString(),
+    end: end.toISOString(),
+    note,
+    orgId: Number(currentOrgId),
+    carId: isExtra ? null : Number(selected),
+    extraCarId: isExtra ? Number(String(selected).replace("extra-", "")) : null,
+  };
+
+  const res = await fetch(API_BASE + "/api/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
 
-  // -------- INIT --------
-  (async function init() {
-    // altijd header datum updaten
+  const data = await res.json();
+
+  if (!res.ok) {
+    showMessage(data.error || "Er ging iets mis.", "error");
+    return;
+  }
+
+  showMessage("Reservering opgeslagen ✔️", "success");
+
+  await renderWeek();
+  setTimeout(closeSheet, 500);
+});
+
+
+  // -------- EVENT LISTENERS --------
+
+  startTimeInput.addEventListener("change", updateCarAvailability);
+  endTimeInput.addEventListener("change", updateCarAvailability);
+  formDateInput.addEventListener("change", updateCarAvailability);
+
+  sheetCloseBtn.addEventListener("click", closeSheet);
+  sheetOverlay.addEventListener("click", closeSheet);
+
+  tabOverview.addEventListener("click", () => setActiveTab("overview"));
+  tabSearch.addEventListener("click", () => setActiveTab("search"));
+  tabCars.addEventListener("click", () => setActiveTab("cars"));
+
+  function setActiveTab(tab) {
+    overviewSection.classList.toggle("hidden", tab !== "overview");
+    searchSection.classList.toggle("hidden", tab !== "search");
+    carsSection.classList.toggle("hidden", tab !== "cars");
+
+    tabOverview.classList.toggle("active", tab === "overview");
+    tabSearch.classList.toggle("active", tab === "search");
+    tabCars.classList.toggle("active", tab === "cars");
+
+    if (tab === "cars") renderCars();
+  }
+
+  prevWeekBtn.addEventListener("click", () => {
+    if (!currentOrgId) return;
+    currentWeekAnchor = addDays(currentWeekAnchor, -7);
+    renderWeek();
+  });
+
+  nextWeekBtn.addEventListener("click", () => {
+    if (!currentOrgId) return;
+    currentWeekAnchor = addDays(currentWeekAnchor, 7);
+    renderWeek();
+  });
+
+  todayWeekBtn.addEventListener("click", () => {
+    if (!currentOrgId) return;
+    currentWeekAnchor = new Date();
+    renderWeek();
+  });
+
+  tabAdd.addEventListener("click", async () => {
+    // reset
+    userNameInput.value = "";
+    noteInput.value = "";
+    formDateInput.value = isoDate(new Date());
+    startTimeInput.value = "";
+    endTimeInput.value = "";
+    carSelect.innerHTML = "<option value=''>Kies een auto…</option>";
+    carAvailabilityHint.textContent = "";
+
+    openSheet();
+
+    // ✅ Zorg dat het extra-form bestaat, maar blijft dicht (geen last)
+    ensureExtraCarFormExists();
+    setExtraCarPanelOpen(false);
+
+    await updateCarAvailability();
+    injectExtraCarsIntoBookingSelect();
+
+  });
+
+  function openSheet() {
+    bottomSheet.classList.add("open");
+    sheetOverlay.classList.add("visible");
+  }
+
+  function closeSheet() {
+    bottomSheet.classList.remove("open");
+    sheetOverlay.classList.remove("visible");
+    showMessage("");
+  }
+
+  // -------- INIT APP --------
+
+  async function initApp() {
     updateHeaderToday();
-
-    // sheet default date
+    currentWeekAnchor = new Date();
     formDateInput.value = isoDate(new Date());
 
-    // al ingelogd?
-    if (currentOrgId) {
-      showApp();
-      setActiveTab("overview");
+    allCars = [];
+    await ensureCarsLoaded();
 
-      try {
-        await ensureCarsLoaded();
-        await renderTodayExtraCarsDropdown();
-        await renderWeek();
-      } catch (e) {
-        console.error(e);
-      }
-      hidePreloader();
-    } else {
-      showLogin();
-      hidePreloader();
-    }
-  })();
+    await renderWeek();
+    await renderTodayExtraCarsDropdown();
+
+    // Zorg dat sheet kan scrollen (zonder CSS wijziging)
+    bottomSheet.style.maxHeight = "78vh";
+    bottomSheet.style.overflowY = "auto";
+  }
+
+  if (currentOrgId) {
+    showMainApp();
+    initApp();
+  } else {
+    showLogin();
+  }
 </script>
+
+
+
+</body>
+</html>
