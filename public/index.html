@@ -83,6 +83,7 @@
     font-size: 11px;
     opacity: 0.9;
     margin-top: 3px;
+    display: none;
   }
 
   body {
@@ -605,7 +606,6 @@
               </select>
               <span class="glass-caret">▾</span>
             </div>
-            <div id="todayCarsHint" class="glass-subhint"></div>
           </div>
 
           <button id="logoutBtn" class="logout-btn" type="button">
@@ -886,7 +886,7 @@
       extraCarsToday = await fetchExtraCarsToday();
 
       // Basis placeholder
-      todayCarsSelect.innerHTML = `<option value="">Extra beschikbare auto’s vandaag</option>`;
+      todayCarsSelect.innerHTML = `<option value="">Extra auto's</option>`;
 
       if (extraCarsToday.length) {
         extraCarsToday.forEach((car) => {
@@ -895,7 +895,7 @@
           opt.textContent = `${car.license}${car.name ? " – " + car.name : ""}`;
           todayCarsSelect.appendChild(opt);
         });
-        if (todayCarsHint) todayCarsHint.textContent = `${extraCarsToday.length} extra auto(’s) beschikbaar vandaag.`;
+        if (todayCarsHint) todayCarsHint.textContent = `${extraCarsToday.length} extra auto(’s)`;
       } else {
         if (todayCarsHint) todayCarsHint.textContent = "Nog geen extra auto’s beschikbaar vandaag.";
       }
