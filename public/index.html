@@ -79,13 +79,6 @@
     opacity: 0.9;
   }
 
-  .glass-subhint {
-    font-size: 11px;
-    opacity: 0.9;
-    margin-top: 3px;
-    display: none;
-  }
-
   body {
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -226,13 +219,6 @@
     align-items: center;
     gap: 8px;
   }
-  .week-info-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    margin-bottom: 2px;
-  }
   .week-info-range { font-size: 13px; font-weight: 500; }
   .week-nav-buttons { display: flex; gap: 4px; }
   .week-nav-buttons button {
@@ -352,7 +338,6 @@
   z-index: 50;
 }
 
-/* premium glass highlight */
 .tab-bar::after{
   content:"";
   position:absolute;
@@ -366,29 +351,23 @@
   pointer-events:none;
 }
 
-/* buttons */
 .tab-btn{
   flex: 1;
   height: 100%;
-
   border: none;
   background: none;
   cursor: pointer;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   gap: 3px;
-
   font-size: 11px;
   color: #6b7280;
   font-weight: 600;
-
   transition: transform .18s ease, color .18s ease, opacity .18s ease;
   position: relative;
-  z-index: 1; /* boven de ::after */
+  z-index: 1;
 }
 
 .tab-icon{
@@ -396,7 +375,6 @@
   transition: transform .18s ease, opacity .18s ease;
 }
 
-/* active state */
 .tab-btn.active{
   color: #ef8774;
 }
@@ -405,7 +383,6 @@
   transform: translateY(-2px) scale(1.06);
 }
 
-/* add button (floating) */
 .tab-btn-add{
   flex: 1;
 }
@@ -426,6 +403,79 @@
 .tab-btn-add:active .add-circle{
   transform: scale(.92);
 }
+
+  /* CHOICE MENU */
+  .choice-menu {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 110%);
+    bottom: 108px;
+    width: calc(100% - 28px);
+    max-width: 460px;
+    background: rgba(255,255,255,0.98);
+    border: 1px solid rgba(15,23,42,.08);
+    border-radius: 22px;
+    box-shadow: 0 -10px 30px rgba(15,23,42,.22);
+    padding: 16px;
+    z-index: 60;
+    transition: transform .28s cubic-bezier(.22,.61,.36,1);
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .choice-menu.open {
+    transform: translate(-50%, 0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .choice-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .choice-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .choice-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .choice-btn {
+    flex: 1;
+    padding: 16px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+  }
+
+  .choice-btn-icon {
+    font-size: 32px;
+    color: var(--accent);
+  }
+
+  .choice-btn-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
 
   /* BOTTOM SHEET */
 .bottom-sheet{
@@ -601,7 +651,7 @@
   .tab-bar{
     bottom: calc(16px + env(safe-area-inset-bottom));
   }
-  .bottom-sheet{
+  .bottom-sheet, .choice-menu{
     bottom: calc(108px + env(safe-area-inset-bottom));
   }
   .content{
@@ -753,35 +803,51 @@
       <!-- SHEET OVERLAY -->
       <div id="sheetOverlay" class="sheet-overlay"></div>
 
-      <!-- BOTTOM SHEET: NIEUWE RESERVERING -->
-      <section id="bottomSheet" class="bottom-sheet">
+      <!-- CHOICE MENU -->
+      <section id="choiceMenu" class="choice-menu">
+        <div class="choice-title">Wat wil je reserveren?</div>
+        <div class="choice-subtitle">Kies tussen een auto of een vergaderruimte</div>
+        <div class="choice-buttons">
+          <button id="choiceCar" class="choice-btn" type="button">
+            <span class="material-symbols-rounded choice-btn-icon">directions_car</span>
+            <span class="choice-btn-text">Auto</span>
+          </button>
+          <button id="choiceMeeting" class="choice-btn" type="button">
+            <span class="material-symbols-rounded choice-btn-icon">meeting_room</span>
+            <span class="choice-btn-text">Vergaderruimte</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- BOTTOM SHEET: AUTO RESERVERING -->
+      <section id="carSheet" class="bottom-sheet">
         <div class="sheet-header">
           <div>
-            <div class="sheet-title">Nieuwe reservering</div>
+            <div class="sheet-title">Nieuwe autoreservering</div>
             <div class="sheet-sub">
               Kies een periode, dan zie je welke poolauto's beschikbaar zijn.
             </div>
           </div>
-          <button id="sheetCloseBtn" class="sheet-close" type="button">×</button>
+          <button id="carSheetClose" class="sheet-close" type="button">×</button>
         </div>
 
-        <div id="message"></div>
+        <div id="carMessage"></div>
 
-        <form id="bookingForm">
-          <label for="userName">Naam</label>
-          <input id="userName" type="text" placeholder="Voornaam" required />
+        <form id="carBookingForm">
+          <label for="carUserName">Naam</label>
+          <input id="carUserName" type="text" placeholder="Voornaam" required />
 
-          <label for="formDate">Datum</label>
-          <input id="formDate" class="sheet-date-input" type="date" required />
+          <label for="carFormDate">Datum</label>
+          <input id="carFormDate" class="sheet-date-input" type="date" required />
 
           <div class="sheet-row sheet-row-times">
             <div>
-              <label for="startTime">Start</label>
-              <input id="startTime" type="time" required />
+              <label for="carStartTime">Start</label>
+              <input id="carStartTime" type="time" required />
             </div>
             <div>
-              <label for="endTime">Einde</label>
-              <input id="endTime" type="time" required />
+              <label for="carEndTime">Einde</label>
+              <input id="carEndTime" type="time" required />
             </div>
           </div>
 
@@ -791,8 +857,52 @@
           </select>
           <div id="carAvailabilityHint" class="car-hint"></div>
 
-          <label for="note">Opmerking (optioneel)</label>
-          <textarea id="note" rows="1" placeholder="Bijv. bezoek cliënt X"></textarea>
+          <label for="carNote">Opmerking (optioneel)</label>
+          <textarea id="carNote" rows="1" placeholder="Bijv. bezoek cliënt X"></textarea>
+
+          <button class="sheet-button" type="submit">Reservering opslaan</button>
+        </form>
+      </section>
+
+      <!-- BOTTOM SHEET: VERGADER RESERVERING -->
+      <section id="meetingSheet" class="bottom-sheet">
+        <div class="sheet-header">
+          <div>
+            <div class="sheet-title">Nieuwe vergaderreservering</div>
+            <div class="sheet-sub">
+              Reserveer een vergaderruimte voor je afspraak.
+            </div>
+          </div>
+          <button id="meetingSheetClose" class="sheet-close" type="button">×</button>
+        </div>
+
+        <div id="meetingMessage"></div>
+
+        <form id="meetingBookingForm">
+          <label for="meetingOrganizer">Naam</label>
+          <input id="meetingOrganizer" type="text" placeholder="Jouw naam" required />
+
+          <label for="meetingTitle">Onderwerp (optioneel)</label>
+          <input id="meetingTitle" type="text" placeholder="Bijv. Team overleg" />
+
+          <label for="meetingFormDate">Datum</label>
+          <input id="meetingFormDate" class="sheet-date-input" type="date" required />
+
+          <div class="sheet-row sheet-row-times">
+            <div>
+              <label for="meetingStartTime">Start</label>
+              <input id="meetingStartTime" type="time" required />
+            </div>
+            <div>
+              <label for="meetingEndTime">Einde</label>
+              <input id="meetingEndTime" type="time" required />
+            </div>
+          </div>
+
+          <label for="roomSelect">Vergaderruimte</label>
+          <select id="roomSelect" required>
+            <option value="">Selecteer een ruimte…</option>
+          </select>
 
           <button class="sheet-button" type="submit">Reservering opslaan</button>
         </form>
@@ -810,7 +920,6 @@
   let extraCarsToday = [];
   let preferredExtraCarId = null;
 
-  // Vergaderruimtes uit database
   let meetingRooms = [];
 
   const loginScreen = document.getElementById("loginScreen");
@@ -844,20 +953,38 @@
 
   const carsContainer = document.getElementById("carsContainer");
 
-  const bottomSheet = document.getElementById("bottomSheet");
   const sheetOverlay = document.getElementById("sheetOverlay");
-  const sheetCloseBtn = document.getElementById("sheetCloseBtn");
 
-  const bookingForm = document.getElementById("bookingForm");
-  const userNameInput = document.getElementById("userName");
-  const formDateInput = document.getElementById("formDate");
-  const startTimeInput = document.getElementById("startTime");
-  const endTimeInput = document.getElementById("endTime");
-  const noteInput = document.getElementById("note");
+  // Choice menu
+  const choiceMenu = document.getElementById("choiceMenu");
+  const choiceCar = document.getElementById("choiceCar");
+  const choiceMeeting = document.getElementById("choiceMeeting");
+
+  // Car sheet
+  const carSheet = document.getElementById("carSheet");
+  const carSheetClose = document.getElementById("carSheetClose");
+  const carBookingForm = document.getElementById("carBookingForm");
+  const carUserNameInput = document.getElementById("carUserName");
+  const carFormDateInput = document.getElementById("carFormDate");
+  const carStartTimeInput = document.getElementById("carStartTime");
+  const carEndTimeInput = document.getElementById("carEndTime");
+  const carNoteInput = document.getElementById("carNote");
   const carSelect = document.getElementById("carSelect");
   const carAvailabilityHint = document.getElementById("carAvailabilityHint");
+  const carMessageDiv = document.getElementById("carMessage");
 
-  const messageDiv = document.getElementById("message");
+  // Meeting sheet
+  const meetingSheet = document.getElementById("meetingSheet");
+  const meetingSheetClose = document.getElementById("meetingSheetClose");
+  const meetingBookingForm = document.getElementById("meetingBookingForm");
+  const meetingOrganizerInput = document.getElementById("meetingOrganizer");
+  const meetingTitleInput = document.getElementById("meetingTitle");
+  const meetingFormDateInput = document.getElementById("meetingFormDate");
+  const meetingStartTimeInput = document.getElementById("meetingStartTime");
+  const meetingEndTimeInput = document.getElementById("meetingEndTime");
+  const roomSelect = document.getElementById("roomSelect");
+  const meetingMessageDiv = document.getElementById("meetingMessage");
+
   let currentWeekAnchor = new Date();
 
   // -------- UTILITIES --------
@@ -892,12 +1019,20 @@
     });
   }
 
-  function showMessage(text, type) {
+  function showCarMessage(text, type) {
     if (!text) {
-      messageDiv.innerHTML = "";
+      carMessageDiv.innerHTML = "";
       return;
     }
-    messageDiv.innerHTML = `<div class="message ${type || ""}">${text}</div>`;
+    carMessageDiv.innerHTML = `<div class="message ${type || ""}">${text}</div>`;
+  }
+
+  function showMeetingMessage(text, type) {
+    if (!text) {
+      meetingMessageDiv.innerHTML = "";
+      return;
+    }
+    meetingMessageDiv.innerHTML = `<div class="message ${type || ""}">${text}</div>`;
   }
 
   function updateHeaderToday() {
@@ -1043,7 +1178,7 @@
       </div>
     `;
 
-    bookingForm.insertAdjacentElement("afterend", wrap);
+    carBookingForm.insertAdjacentElement("afterend", wrap);
 
     const toggleBtn = document.getElementById("extraCarToggle");
     toggleBtn.addEventListener("click", () => {
@@ -1119,7 +1254,7 @@
       const v = todayCarsSelect.value;
 
       if (v === "__add_extra__") {
-        openSheet();
+        openCarSheet();
         ensureExtraCarFormExists();
 
         setTimeout(() => {
@@ -1261,9 +1396,9 @@
 async function updateCarAvailability() {
   if (!currentOrgId) return;
 
-  const date = formDateInput.value;
-  const s = startTimeInput.value;
-  const e = endTimeInput.value;
+  const date = carFormDateInput.value;
+  const s = carStartTimeInput.value;
+  const e = carEndTimeInput.value;
 
   if (!date || !s || !e) {
     try {
@@ -1424,7 +1559,7 @@ function injectExtraCarsIntoBookingSelect() {
                   ${range}
                   <button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>
                 </div>
-              </div>
+                </div>
             `;
           });
       }
@@ -1603,65 +1738,115 @@ function injectExtraCarsIntoBookingSelect() {
     initApp();
   });
 
-  // -------- FORM SUBMIT (booking) --------
+  // -------- FORM SUBMIT (car booking) --------
 
-bookingForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  showMessage("");
+  carBookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showCarMessage("");
 
-  const userName = userNameInput.value.trim();
-  const date = formDateInput.value;
-  const s = startTimeInput.value;
-  const t = endTimeInput.value;
-  const note = noteInput.value.trim();
-  const selected = carSelect.value;
+    const userName = carUserNameInput.value.trim();
+    const date = carFormDateInput.value;
+    const s = carStartTimeInput.value;
+    const t = carEndTimeInput.value;
+    const note = carNoteInput.value.trim();
+    const selected = carSelect.value;
 
-  if (!date || !s || !t || !userName || !selected) {
-    showMessage("Vul alle velden in.", "error");
-    return;
-  }
+    if (!date || !s || !t || !userName || !selected) {
+      showCarMessage("Vul alle velden in.", "error");
+      return;
+    }
 
-  const start = new Date(date + "T" + s);
-  const end = new Date(date + "T" + t);
+    const start = new Date(date + "T" + s);
+    const end = new Date(date + "T" + t);
 
-  const isExtra = String(selected).startsWith("extra-");
-  const payload = {
-    userName,
-    start: start.toISOString(),
-    end: end.toISOString(),
-    note,
-    orgId: Number(currentOrgId),
-    carId: isExtra ? null : Number(selected),
-    extraCarId: isExtra ? Number(String(selected).replace("extra-", "")) : null,
-  };
+    const isExtra = String(selected).startsWith("extra-");
+    const payload = {
+      userName,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      note,
+      orgId: Number(currentOrgId),
+      carId: isExtra ? null : Number(selected),
+      extraCarId: isExtra ? Number(String(selected).replace("extra-", "")) : null,
+    };
 
-  const res = await fetch(API_BASE + "/api/bookings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    const res = await fetch(API_BASE + "/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showCarMessage(data.error || "Er ging iets mis.", "error");
+      return;
+    }
+
+    showCarMessage("Reservering opgeslagen ✔️", "success");
+
+    await renderWeek();
+    setTimeout(closeAllSheets, 500);
   });
 
-  const data = await res.json();
+  // -------- FORM SUBMIT (meeting booking) --------
 
-  if (!res.ok) {
-    showMessage(data.error || "Er ging iets mis.", "error");
-    return;
-  }
+  meetingBookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showMeetingMessage("");
 
-  showMessage("Reservering opgeslagen ✔️", "success");
+    const organizer = meetingOrganizerInput.value.trim();
+    const title = meetingTitleInput.value.trim();
+    const date = meetingFormDateInput.value;
+    const s = meetingStartTimeInput.value;
+    const t = meetingEndTimeInput.value;
+    const roomId = roomSelect.value;
 
-  await renderWeek();
-  setTimeout(closeSheet, 500);
-});
+    if (!date || !s || !t || !organizer || !roomId) {
+      showMeetingMessage("Vul alle velden in.", "error");
+      return;
+    }
+
+    const start = new Date(date + "T" + s);
+    const end = new Date(date + "T" + t);
+
+    const payload = {
+      roomId: Number(roomId),
+      orgId: Number(currentOrgId),
+      title: title || null,
+      organizer,
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+    };
+
+    const res = await fetch(API_BASE + "/api/meeting-bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMeetingMessage(data.error || "Er ging iets mis.", "error");
+      return;
+    }
+
+    showMeetingMessage("Vergadering opgeslagen ✔️", "success");
+
+    await renderMeetingWeek();
+    setTimeout(closeAllSheets, 500);
+  });
 
   // -------- EVENT LISTENERS --------
 
-  startTimeInput.addEventListener("change", updateCarAvailability);
-  endTimeInput.addEventListener("change", updateCarAvailability);
-  formDateInput.addEventListener("change", updateCarAvailability);
+  carStartTimeInput.addEventListener("change", updateCarAvailability);
+  carEndTimeInput.addEventListener("change", updateCarAvailability);
+  carFormDateInput.addEventListener("change", updateCarAvailability);
 
-  sheetCloseBtn.addEventListener("click", closeSheet);
-  sheetOverlay.addEventListener("click", closeSheet);
+  carSheetClose.addEventListener("click", closeAllSheets);
+  meetingSheetClose.addEventListener("click", closeAllSheets);
+  sheetOverlay.addEventListener("click", closeAllSheets);
 
   tabOverview.addEventListener("click", () => setActiveTab("overview"));
   tabMeeting.addEventListener("click", () => setActiveTab("meeting"));
@@ -1701,34 +1886,81 @@ bookingForm.addEventListener("submit", async (e) => {
     if (!meetingSection.classList.contains("hidden")) renderMeetingWeek();
   });
 
-  tabAdd.addEventListener("click", async () => {
-    userNameInput.value = "";
-    noteInput.value = "";
-    formDateInput.value = isoDate(new Date());
-    startTimeInput.value = "";
-    endTimeInput.value = "";
-    carSelect.innerHTML = "<option value=''>Kies een auto…</option>";
-    carAvailabilityHint.textContent = "";
+  // -------- CHOICE MENU --------
 
-    openSheet();
-
-    ensureExtraCarFormExists();
-    setExtraCarPanelOpen(false);
-
-    await updateCarAvailability();
-    injectExtraCarsIntoBookingSelect();
-
+  tabAdd.addEventListener("click", () => {
+    openChoiceMenu();
   });
 
-  function openSheet() {
-    bottomSheet.classList.add("open");
+  choiceCar.addEventListener("click", () => {
+    closeChoiceMenu();
+    setTimeout(async () => {
+      carUserNameInput.value = "";
+      carNoteInput.value = "";
+      carFormDateInput.value = isoDate(new Date());
+      carStartTimeInput.value = "";
+      carEndTimeInput.value = "";
+      carSelect.innerHTML = "<option value=''>Kies een auto…</option>";
+      carAvailabilityHint.textContent = "";
+
+      openCarSheet();
+
+      ensureExtraCarFormExists();
+      setExtraCarPanelOpen(false);
+
+      await updateCarAvailability();
+      injectExtraCarsIntoBookingSelect();
+    }, 300);
+  });
+
+  choiceMeeting.addEventListener("click", () => {
+    closeChoiceMenu();
+    setTimeout(() => {
+      meetingOrganizerInput.value = "";
+      meetingTitleInput.value = "";
+      meetingFormDateInput.value = isoDate(new Date());
+      meetingStartTimeInput.value = "";
+      meetingEndTimeInput.value = "";
+
+      roomSelect.innerHTML = "<option value=''>Kies een ruimte…</option>";
+      meetingRooms.forEach((room) => {
+        const opt = document.createElement("option");
+        opt.value = String(room.id);
+        opt.textContent = `${room.name} (${room.capacity} personen)`;
+        roomSelect.appendChild(opt);
+      });
+
+      openMeetingSheet();
+    }, 300);
+  });
+
+  function openChoiceMenu() {
+    choiceMenu.classList.add("open");
     sheetOverlay.classList.add("visible");
   }
 
-  function closeSheet() {
-    bottomSheet.classList.remove("open");
+  function closeChoiceMenu() {
+    choiceMenu.classList.remove("open");
     sheetOverlay.classList.remove("visible");
-    showMessage("");
+  }
+
+  function openCarSheet() {
+    carSheet.classList.add("open");
+    sheetOverlay.classList.add("visible");
+  }
+
+  function openMeetingSheet() {
+    meetingSheet.classList.add("open");
+    sheetOverlay.classList.add("visible");
+  }
+
+  function closeAllSheets() {
+    carSheet.classList.remove("open");
+    meetingSheet.classList.remove("open");
+    choiceMenu.classList.remove("open");
+    sheetOverlay.classList.remove("visible");
+    showCarMessage("");
+    showMeetingMessage("");
   }
 
   // -------- INIT APP --------
@@ -1736,20 +1968,22 @@ bookingForm.addEventListener("submit", async (e) => {
   async function initApp() {
     updateHeaderToday();
     currentWeekAnchor = new Date();
-    formDateInput.value = isoDate(new Date());
+    carFormDateInput.value = isoDate(new Date());
+    meetingFormDateInput.value = isoDate(new Date());
 
     allCars = [];
     await ensureCarsLoaded();
 
-    // Laad vergaderruimtes uit database
     meetingRooms = await fetchMeetingRooms();
 
     await renderWeek();
     await renderMeetingWeek();
     await renderTodayExtraCarsDropdown();
 
-    bottomSheet.style.maxHeight = "78vh";
-    bottomSheet.style.overflowY = "auto";
+    carSheet.style.maxHeight = "78vh";
+    carSheet.style.overflowY = "auto";
+    meetingSheet.style.maxHeight = "78vh";
+    meetingSheet.style.overflowY = "auto";
   }
 
   if (currentOrgId) {
