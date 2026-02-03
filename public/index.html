@@ -310,23 +310,17 @@
   }
   .booking-delete-btn:hover { color: #ef4444; }
 
-  /* SEARCH SECTION */
-  .search-box {
-    background-color: #ffffff;
-    padding: 10px 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
-    margin-bottom: 12px;
+  /* MEETING ROOM BADGE */
+  .room-badge {
+    display: inline-block;
+    background: #8b5cf6;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11px;
+    border: 1px solid #7c3aed;
   }
-  .search-box input {
-    width: 100%;
-    padding: 8px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    font-size: 13px;
-    outline: none;
-  }
-  .search-box input:focus { border-color: var(--accent); }
 
 /* BOTTOM NAV (modern floating glass) */
 .tab-bar{
@@ -434,12 +428,11 @@
 }
 
   /* BOTTOM SHEET */
-/* BOTTOM SHEET (zwevend boven de floating tabbar) */
 .bottom-sheet{
   position: fixed;
   left: 50%;
-  transform: translate(-50%, 110%); /* standaard volledig verborgen */
-  bottom: 108px; /* hoogte boven je floating nav */
+  transform: translate(-50%, 110%);
+  bottom: 108px;
 
   width: calc(100% - 28px);
   max-width: 460px;
@@ -455,7 +448,6 @@
 
   transition: transform .28s cubic-bezier(.22,.61,.36,1);
 
-  /* extra: écht niet klikbaar / zichtbaar tot open */
   visibility: hidden;
   pointer-events: none;
 }
@@ -466,11 +458,10 @@
   pointer-events: auto;
 }
 
-/* header styles (jouw bestaande) */
-.sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.sheet-title { font-size: 13px; font-weight: 600; }
-.sheet-sub { font-size: 11px; color: var(--text-muted); }
-.sheet-close { border: none; background: none; font-size: 18px; cursor: pointer; color: var(--text-muted); }
+  .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .sheet-title { font-size: 13px; font-weight: 600; }
+  .sheet-sub { font-size: 11px; color: var(--text-muted); }
+  .sheet-close { border: none; background: none; font-size: 18px; cursor: pointer; color: var(--text-muted); }
 
 
   label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
@@ -630,7 +621,7 @@
       <div>
         <div class="login-title">Wagenpark beheer</div>
         <div class="login-subtitle">
-          Log in met de code van jouw organisatie om de poolauto’s te beheren.
+          Log in met de code van jouw organisatie om de poolauto's te beheren.
         </div>
       </div>
       <div class="login-card">
@@ -653,7 +644,7 @@
               <strong>iPhone (Safari):</strong>
               <ol>
                 <li>Druk onderin op de <strong>deelknop</strong>.</li>
-                <li>Kies <strong>‘Zet op beginscherm’</strong>.</li>
+                <li>Kies <strong>'Zet op beginscherm'</strong>.</li>
                 <li>Zorg dat <strong>Open als webapp</strong> aan staat.</li>
               </ol>
             </div>
@@ -662,8 +653,8 @@
               <strong>Android (Chrome):</strong>
               <ol>
                 <li>Open het menu rechtsboven (⋮).</li>
-                <li>Kies <strong>‘Toevoegen aan startscherm’</strong>.</li>
-                <li>Bevestig met <strong>‘Toevoegen’</strong>.</li>
+                <li>Kies <strong>'Toevoegen aan startscherm'</strong>.</li>
+                <li>Bevestig met <strong>'Toevoegen'</strong>.</li>
               </ol>
             </div>
 
@@ -720,15 +711,10 @@
           <div id="daysContainer"></div>
         </section>
 
-        <!-- Zoeken (placeholder) -->
-        <section id="searchSection" class="hidden">
-          <div class="section-title">Zoeken</div>
-          <div class="search-box">
-            <input id="searchInput" type="text" placeholder="Zoek op naam (komt later)" />
-          </div>
-          <p style="font-size:12px; color:var(--text-muted); padding:0 4px;">
-            Hier kun je later zoeken op naam van medewerker of cliënt over alle reserveringen.
-          </p>
+        <!-- Vergaderruimtes -->
+        <section id="meetingSection" class="hidden">
+          <div class="section-title">Vergaderruimtes</div>
+          <div id="meetingDaysContainer"></div>
         </section>
 
         <!-- Auto beheer -->
@@ -748,9 +734,9 @@
           <span class="tab-icon material-symbols-rounded">home</span>
           <span>Overzicht</span>
         </button>
-        <button id="tabSearch" class="tab-btn" type="button">
-          <span class="tab-icon material-symbols-rounded">search</span>
-          <span>Zoeken</span>
+        <button id="tabMeeting" class="tab-btn" type="button">
+          <span class="tab-icon material-symbols-rounded">groups</span>
+          <span>Vergaderen</span>
         </button>
         <button id="tabCars" class="tab-btn" type="button">
           <span class="tab-icon material-symbols-rounded">garage</span>
@@ -815,59 +801,53 @@
   </div>
 
 <script>
-  // Werkt op localhost én Render
   const API_BASE = "";
 
-  // --- ORGANISATIE STATE ---
   let currentOrgId = localStorage.getItem("poolauto_orgId");
   let currentOrgName = localStorage.getItem("poolauto_orgName");
-  let allCars = []; // vaste poolauto's (id, name, license)
+  let allCars = [];
 
-  // Extra beschikbare auto's (medewerkers)
   let extraCarsToday = [];
-  let preferredExtraCarId = null; // (optioneel) laatst gekozen extra auto
+  let preferredExtraCarId = null;
 
-  // LOGIN ELEMENTEN
+  // Vergaderruimtes uit database
+  let meetingRooms = [];
+
   const loginScreen = document.getElementById("loginScreen");
   const mainApp = document.getElementById("mainApp");
   const loginForm = document.getElementById("loginForm");
   const orgCodeInput = document.getElementById("orgCodeInput");
   const loginMessage = document.getElementById("loginMessage");
 
-  // UITLOGGEN
   const logoutBtn = document.getElementById("logoutBtn");
 
-  // MAIN UI ELEMENTEN
   const daysContainer = document.getElementById("daysContainer");
+  const meetingDaysContainer = document.getElementById("meetingDaysContainer");
   const weekTitle = document.getElementById("weekTitle");
   const headerDateText = document.getElementById("headerDateText");
   const headerOrgNameEl = document.getElementById("headerOrgName");
 
-  // Header dropdown (jij hebt deze id in HTML)
   const todayCarsSelect = document.getElementById("todayCarsSelect");
-  const todayCarsHint = document.getElementById("todayCarsHint");
 
   const prevWeekBtn = document.getElementById("prevWeekBtn");
   const nextWeekBtn = document.getElementById("nextWeekBtn");
   const todayWeekBtn = document.getElementById("todayWeekBtn");
 
   const overviewSection = document.getElementById("overviewSection");
-  const searchSection = document.getElementById("searchSection");
+  const meetingSection = document.getElementById("meetingSection");
   const carsSection = document.getElementById("carsSection");
 
   const tabOverview = document.getElementById("tabOverview");
-  const tabSearch = document.getElementById("tabSearch");
+  const tabMeeting = document.getElementById("tabMeeting");
   const tabCars = document.getElementById("tabCars");
   const tabAdd = document.getElementById("tabAdd");
 
   const carsContainer = document.getElementById("carsContainer");
 
-  // Bottom sheet
   const bottomSheet = document.getElementById("bottomSheet");
   const sheetOverlay = document.getElementById("sheetOverlay");
   const sheetCloseBtn = document.getElementById("sheetCloseBtn");
 
-  // Form fields (booking)
   const bookingForm = document.getElementById("bookingForm");
   const userNameInput = document.getElementById("userName");
   const formDateInput = document.getElementById("formDate");
@@ -926,6 +906,23 @@
     headerOrgNameEl.textContent = currentOrgName || "";
   }
 
+  // -------- MEETING ROOMS DATA --------
+  
+  async function fetchMeetingRooms() {
+    if (!currentOrgId) return [];
+    const params = new URLSearchParams({ orgId: currentOrgId });
+    const res = await fetch(API_BASE + "/api/meeting-rooms?" + params.toString());
+    const data = await res.json();
+    return data || [];
+  }
+
+  async function fetchMeetingBookingsForDate(dateStr) {
+    if (!currentOrgId) return [];
+    const params = new URLSearchParams({ date: dateStr, orgId: currentOrgId });
+    const res = await fetch(API_BASE + "/api/meeting-bookings?" + params.toString());
+    return await res.json();
+  }
+
   // -------- DATA FETCH --------
 
   async function fetchBookingsForDate(dateStr) {
@@ -947,8 +944,6 @@
     }
   }
 
-  // -------- EXTRA AUTO'S (header dropdown) --------
-
   async function fetchExtraCarsToday() {
     if (!currentOrgId) return [];
     const today = isoDate(new Date());
@@ -963,12 +958,9 @@
     if (!todayCarsSelect) return;
 
     todayCarsSelect.innerHTML = `<option value="">Vandaag: laden…</option>`;
-    if (todayCarsHint) todayCarsHint.textContent = "";
 
     try {
       extraCarsToday = await fetchExtraCarsToday();
-
-      // Basis placeholder
       todayCarsSelect.innerHTML = `<option value="">Extra auto's</option>`;
 
       if (extraCarsToday.length) {
@@ -978,24 +970,18 @@
           opt.textContent = `${car.license}${car.name ? " – " + car.name : ""}`;
           todayCarsSelect.appendChild(opt);
         });
-        if (todayCarsHint) todayCarsHint.textContent = `${extraCarsToday.length} extra auto(’s)`;
-      } else {
-        if (todayCarsHint) todayCarsHint.textContent = "Nog geen extra auto’s beschikbaar vandaag.";
       }
 
-      // Divider
       const div = document.createElement("option");
       div.disabled = true;
       div.textContent = "────────────";
       todayCarsSelect.appendChild(div);
 
-      // Action
       const addOpt = document.createElement("option");
       addOpt.value = "__add_extra__";
       addOpt.textContent = "➕ Eigen auto beschikbaar stellen…";
       todayCarsSelect.appendChild(addOpt);
 
-      // Herstel selectie indien nog geldig
       if (preferredExtraCarId) {
         const key = `extra-${preferredExtraCarId}`;
         const exists = Array.from(todayCarsSelect.options).some((o) => o.value === key);
@@ -1004,11 +990,9 @@
     } catch (e) {
       console.error(e);
       todayCarsSelect.innerHTML = `<option value="">Vandaag: fout</option>`;
-      if (todayCarsHint) todayCarsHint.textContent = "Kon extra auto’s niet laden.";
     }
   }
 
-  // ✅ Accordion helpers
   function setExtraCarPanelOpen(open) {
     const panel = document.getElementById("extraCarPanel");
     const chev = document.getElementById("extraCarChevron");
@@ -1019,14 +1003,12 @@
   }
 
   function ensureExtraCarFormExists() {
-    // Injecteer 1x een extra-car formulier onder bookingForm
     if (document.getElementById("extraCarForm")) return;
 
     const wrap = document.createElement("div");
     wrap.id = "extraCarWrap";
     wrap.style.marginTop = "14px";
 
-    // ✅ standaard ingeklapt (panel hidden)
     wrap.innerHTML = `
       <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
         <button id="extraCarToggle" type="button"
@@ -1063,7 +1045,6 @@
 
     bookingForm.insertAdjacentElement("afterend", wrap);
 
-    // toggle handler
     const toggleBtn = document.getElementById("extraCarToggle");
     toggleBtn.addEventListener("click", () => {
       const panel = document.getElementById("extraCarPanel");
@@ -1071,11 +1052,9 @@
       setExtraCarPanelOpen(!isOpen);
     });
 
-    // default datum = vandaag
     const dateEl = document.getElementById("extraCarDate");
     if (dateEl) dateEl.value = isoDate(new Date());
 
-    // submit handler
     const form = document.getElementById("extraCarForm");
     const msg = document.getElementById("extraCarMsg");
 
@@ -1119,14 +1098,12 @@
         msg.className = "message success";
         msg.textContent = "Extra auto toegevoegd ✔️";
 
-        // refresh dropdown + selecteer deze auto
         await renderTodayExtraCarsDropdown();
         if (data?.id) {
           preferredExtraCarId = data.id;
           todayCarsSelect.value = `extra-${data.id}`;
         }
 
-        // formulier leeg (datum laten staan)
         document.getElementById("extraCarLicense").value = "";
         document.getElementById("extraCarName").value = "";
       } catch (err) {
@@ -1142,7 +1119,6 @@
       const v = todayCarsSelect.value;
 
       if (v === "__add_extra__") {
-        // ✅ open sheet + inject + klap accordion open
         openSheet();
         ensureExtraCarFormExists();
 
@@ -1156,22 +1132,19 @@
           if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 60);
 
-        // reset dropdown terug naar placeholder
         todayCarsSelect.value = "";
         return;
       }
 
-      // onthoud keuze (optioneel)
       if (String(v).startsWith("extra-")) {
         preferredExtraCarId = Number(String(v).replace("extra-", ""));
-        if (todayCarsHint) todayCarsHint.textContent = "Geselecteerd (extra auto).";
       } else {
         preferredExtraCarId = null;
       }
     });
   }
 
-  // -------- AUTO BEHEER (vaste poolauto's) --------
+  // -------- AUTO BEHEER --------
 
   async function fetchCars() {
     const res = await fetch(API_BASE + "/api/cars");
@@ -1283,7 +1256,7 @@
     }
   }
 
-  // -------- AUTO AVAILABILITY (poolauto's voor boekingen) --------
+  // -------- AUTO AVAILABILITY --------
 
 async function updateCarAvailability() {
   if (!currentOrgId) return;
@@ -1292,7 +1265,6 @@ async function updateCarAvailability() {
   const s = startTimeInput.value;
   const e = endTimeInput.value;
 
-  // ❗ ZONDER datum + tijden: GEEN availability check
   if (!date || !s || !e) {
     try {
       const res = await fetch(API_BASE + "/api/cars");
@@ -1317,7 +1289,6 @@ async function updateCarAvailability() {
     return;
   }
 
-  // ✅ PAS NU availability checken
   const startIso = new Date(date + "T" + s).toISOString();
   const endIso = new Date(date + "T" + e).toISOString();
 
@@ -1365,10 +1336,9 @@ async function updateCarAvailability() {
 function injectExtraCarsIntoBookingSelect() {
   if (!Array.isArray(extraCarsToday) || !extraCarsToday.length) return;
 
-  // Divider
   const divider = document.createElement("option");
   divider.disabled = true;
-  divider.textContent = "──────── Extra auto’s ────────";
+  divider.textContent = "──────── Extra auto's ────────";
   carSelect.appendChild(divider);
 
   extraCarsToday.forEach((car) => {
@@ -1379,8 +1349,7 @@ function injectExtraCarsIntoBookingSelect() {
   });
 }
 
-
-  // -------- WEEK RENDER --------
+  // -------- WEEK RENDER (AUTO'S) --------
 
   async function renderWeek() {
     if (!currentOrgId) return;
@@ -1465,6 +1434,81 @@ function injectExtraCarsIntoBookingSelect() {
     });
   }
 
+  // -------- WEEK RENDER (VERGADERRUIMTES) --------
+
+  async function renderMeetingWeek() {
+    const monday = startOfWeek(currentWeekAnchor);
+    const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+
+    const bookingsPerDay = await Promise.all(days.map((d) => fetchMeetingBookingsForDate(isoDate(d))));
+
+    meetingDaysContainer.innerHTML = "";
+    const today = isoDate(new Date());
+
+    days.forEach((date, idx) => {
+      const bookings = bookingsPerDay[idx] || [];
+      const isToday = isoDate(date) === today;
+
+      const row = document.createElement("div");
+      row.className = "day-row";
+
+      row.innerHTML = `
+        <div class="day-date-column">
+          <div class="day-date-number">${date.getDate()}</div>
+          <div class="day-date-month">${date.toLocaleDateString("nl-NL", { month: "short" })}</div>
+        </div>
+      `;
+
+      const card = document.createElement("div");
+      card.className = "day-card" + (isToday ? " highlight" : "");
+
+      const dayName = date.toLocaleDateString("nl-NL", { weekday: "long" });
+
+      card.innerHTML = `
+        <div class="day-card-header">
+          <div class="day-card-title">${dayName}</div>
+          <div class="day-card-sub">${bookings.length ? bookings.length + " vergadering(en)" : "Geen vergaderingen"}</div>
+        </div>
+      `;
+
+      if (bookings.length === 0) {
+        card.innerHTML += `<div class="booking-empty">Nog geen vergaderingen gepland.</div>`;
+      } else {
+        bookings
+          .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+          .forEach((booking) => {
+            const room = meetingRooms.find(r => r.id === booking.roomId);
+            const roomName = room ? room.name : `Ruimte ${booking.roomId}`;
+
+            const s = new Date(booking.startTime);
+            const e = new Date(booking.endTime);
+            const timeRange =
+              s.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) +
+              " – " +
+              e.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+
+            card.innerHTML += `
+              <div class="booking-item">
+                <div class="booking-label">
+                  ${booking.title || 'Vergadering'}
+                  <br/>
+                  <span class="room-badge">${roomName}</span>
+                  ${booking.organizer ? `<span class="car-name-small">${booking.organizer}</span>` : ""}
+                </div>
+                <div class="booking-time">
+                  ${timeRange}
+                  <button class="booking-delete-btn" onclick="deleteMeetingBooking(${booking.id})">×</button>
+                </div>
+              </div>
+            `;
+          });
+      }
+
+      row.appendChild(card);
+      meetingDaysContainer.appendChild(row);
+    });
+  }
+
   // -------- DELETE BOOKING --------
 
   async function deleteBooking(id) {
@@ -1481,6 +1525,21 @@ function injectExtraCarsIntoBookingSelect() {
   }
 
   window.deleteBooking = deleteBooking;
+
+  async function deleteMeetingBooking(id) {
+    if (!confirm("Weet je zeker dat je deze vergadering wilt verwijderen?")) return;
+    
+    const res = await fetch(API_BASE + "/api/meeting-bookings/" + id, { method: "DELETE" });
+
+    if (!res.ok) {
+      alert("Verwijderen mislukt.");
+      return;
+    }
+
+    await renderMeetingWeek();
+  }
+
+  window.deleteMeetingBooking = deleteMeetingBooking;
 
   // -------- LOGIN / LOGOUT --------
 
@@ -1502,6 +1561,7 @@ function injectExtraCarsIntoBookingSelect() {
     allCars = [];
     extraCarsToday = [];
     preferredExtraCarId = null;
+    meetingRooms = [];
     showLogin();
   }
 
@@ -1544,7 +1604,7 @@ function injectExtraCarsIntoBookingSelect() {
   });
 
   // -------- FORM SUBMIT (booking) --------
-  // LET OP: jouw server.js vereist carId → extra-auto boeken doen we later als endpoint/data-model klaar is.
+
 bookingForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   showMessage("");
@@ -1554,7 +1614,7 @@ bookingForm.addEventListener("submit", async (e) => {
   const s = startTimeInput.value;
   const t = endTimeInput.value;
   const note = noteInput.value.trim();
-  const selected = carSelect.value; // kan "12" of "extra-34" zijn
+  const selected = carSelect.value;
 
   if (!date || !s || !t || !userName || !selected) {
     showMessage("Vul alle velden in.", "error");
@@ -1594,7 +1654,6 @@ bookingForm.addEventListener("submit", async (e) => {
   setTimeout(closeSheet, 500);
 });
 
-
   // -------- EVENT LISTENERS --------
 
   startTimeInput.addEventListener("change", updateCarAvailability);
@@ -1605,41 +1664,44 @@ bookingForm.addEventListener("submit", async (e) => {
   sheetOverlay.addEventListener("click", closeSheet);
 
   tabOverview.addEventListener("click", () => setActiveTab("overview"));
-  tabSearch.addEventListener("click", () => setActiveTab("search"));
+  tabMeeting.addEventListener("click", () => setActiveTab("meeting"));
   tabCars.addEventListener("click", () => setActiveTab("cars"));
 
   function setActiveTab(tab) {
     overviewSection.classList.toggle("hidden", tab !== "overview");
-    searchSection.classList.toggle("hidden", tab !== "search");
+    meetingSection.classList.toggle("hidden", tab !== "meeting");
     carsSection.classList.toggle("hidden", tab !== "cars");
 
     tabOverview.classList.toggle("active", tab === "overview");
-    tabSearch.classList.toggle("active", tab === "search");
+    tabMeeting.classList.toggle("active", tab === "meeting");
     tabCars.classList.toggle("active", tab === "cars");
 
     if (tab === "cars") renderCars();
+    if (tab === "meeting") renderMeetingWeek();
   }
 
   prevWeekBtn.addEventListener("click", () => {
     if (!currentOrgId) return;
     currentWeekAnchor = addDays(currentWeekAnchor, -7);
     renderWeek();
+    if (!meetingSection.classList.contains("hidden")) renderMeetingWeek();
   });
 
   nextWeekBtn.addEventListener("click", () => {
     if (!currentOrgId) return;
     currentWeekAnchor = addDays(currentWeekAnchor, 7);
     renderWeek();
+    if (!meetingSection.classList.contains("hidden")) renderMeetingWeek();
   });
 
   todayWeekBtn.addEventListener("click", () => {
     if (!currentOrgId) return;
     currentWeekAnchor = new Date();
     renderWeek();
+    if (!meetingSection.classList.contains("hidden")) renderMeetingWeek();
   });
 
   tabAdd.addEventListener("click", async () => {
-    // reset
     userNameInput.value = "";
     noteInput.value = "";
     formDateInput.value = isoDate(new Date());
@@ -1650,7 +1712,6 @@ bookingForm.addEventListener("submit", async (e) => {
 
     openSheet();
 
-    // ✅ Zorg dat het extra-form bestaat, maar blijft dicht (geen last)
     ensureExtraCarFormExists();
     setExtraCarPanelOpen(false);
 
@@ -1680,10 +1741,13 @@ bookingForm.addEventListener("submit", async (e) => {
     allCars = [];
     await ensureCarsLoaded();
 
+    // Laad vergaderruimtes uit database
+    meetingRooms = await fetchMeetingRooms();
+
     await renderWeek();
+    await renderMeetingWeek();
     await renderTodayExtraCarsDropdown();
 
-    // Zorg dat sheet kan scrollen (zonder CSS wijziging)
     bottomSheet.style.maxHeight = "78vh";
     bottomSheet.style.overflowY = "auto";
   }
@@ -1695,8 +1759,6 @@ bookingForm.addEventListener("submit", async (e) => {
     showLogin();
   }
 </script>
-
-
 
 </body>
 </html>

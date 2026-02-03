@@ -670,6 +670,216 @@ app.delete("/api/bookings/:id", async (req, res) => {
   }
 });
 
+// Voeg deze code toe VOOR de "START SERVER" regel in je server.js
+
+//
+// ---------- MEETING ROOMS (Supabase) ----------
+//
+
+// GET alle vergaderruimtes voor een organisatie
+app.get("/api/meeting-rooms", async (req, res) => {
+  const { orgId } = req.query;
+
+  if (!orgId) {
+    return res.status(400).json({ error: "orgId is verplicht" });
+  }
+
+  const orgIdNum = Number(orgId);
+
+  try {
+    const { data, error } = await supabase
+      .from("meeting_rooms")
+      .select("*")
+      .eq("org_id", orgIdNum)
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("Supabase fout GET /api/meeting-rooms:", error);
+      return res.status(500).json({ error: "Kon vergaderruimtes niet ophalen." });
+    }
+
+    // camelCase response
+    res.json(
+      (data || []).map((r) => ({
+        id: r.id,
+        orgId: r.org_id,
+        name: r.name,
+        capacity: r.capacity,
+      }))
+    );
+  } catch (err) {
+    console.error("Serverfout GET /api/meeting-rooms:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+//
+// ---------- MEETING BOOKINGS (Supabase) ----------
+//
+
+// GET alle vergaderreserveringen (gefilterd op org + optioneel datum)
+app.get("/api/meeting-bookings", async (req, res) => {
+  const { date, orgId } = req.query;
+
+  if (!orgId) {
+    return res.status(400).json({ error: "orgId is verplicht" });
+  }
+
+  const orgIdNum = Number(orgId);
+
+  try {
+    let query = supabase
+      .from("meeting_bookings")
+      .select("*")
+      .eq("org_id", orgIdNum)
+      .order("start_time", { ascending: true });
+
+    if (date) {
+      query = query.gte("start_time", dayStartIso(date)).lt("start_time", dayEndIso(date));
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Supabase fout GET /api/meeting-bookings:", error);
+      return res.status(500).json({ error: "Kon vergaderreserveringen niet ophalen." });
+    }
+
+    // camelCase response
+    const normalized = (data || []).map((b) => ({
+      id: b.id,
+      roomId: b.room_id,
+      orgId: b.org_id,
+      title: b.title,
+      organizer: b.organizer,
+      startTime: b.start_time,
+      endTime: b.end_time,
+    }));
+
+    res.json(normalized);
+  } catch (err) {
+    console.error("Serverfout GET /api/meeting-bookings:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// POST nieuwe vergaderreservering
+app.post("/api/meeting-bookings", async (req, res) => {
+  const { roomId, orgId, title, organizer, startTime, endTime } = req.body;
+
+  if (!orgId || !roomId || !organizer || !startTime || !endTime) {
+    return res.status(400).json({ 
+      error: "orgId, roomId, organizer, startTime en endTime zijn verplicht" 
+    });
+  }
+
+  const orgIdNum = Number(orgId);
+  const roomIdNum = Number(roomId);
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+
+  if (end <= start) {
+    return res.status(400).json({ error: "Eindtijd moet na starttijd liggen" });
+  }
+
+  try {
+    // Check of kamer bestaat en bij deze org hoort
+    const { data: roomData, error: roomError } = await supabase
+      .from("meeting_rooms")
+      .select("id, org_id")
+      .eq("id", roomIdNum)
+      .eq("org_id", orgIdNum)
+      .single();
+
+    if (roomError || !roomData) {
+      console.error("Supabase fout room-check /api/meeting-bookings:", roomError);
+      return res.status(400).json({ error: "Onbekende vergaderruimte." });
+    }
+
+    // Check overlap
+    const { data: overlapping, error: overlapErr } = await supabase
+      .from("meeting_bookings")
+      .select("id")
+      .eq("room_id", roomIdNum)
+      .lt("start_time", end.toISOString())
+      .gt("end_time", start.toISOString());
+
+    if (overlapErr) {
+      console.error("Supabase fout overlap-check vergadering:", overlapErr);
+      return res.status(500).json({ error: "Kon beschikbaarheid niet controleren." });
+    }
+
+    if (overlapping && overlapping.length > 0) {
+      return res.status(409).json({ 
+        error: "Deze vergaderruimte is in deze periode al geboekt." 
+      });
+    }
+
+    // Insert nieuwe reservering
+    const insertPayload = {
+      room_id: roomIdNum,
+      org_id: orgIdNum,
+      title: title || null,
+      organizer: organizer,
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("meeting_bookings")
+      .insert([insertPayload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase fout INSERT /api/meeting-bookings:", error);
+      return res.status(500).json({ error: "Kon vergaderreservering niet opslaan." });
+    }
+
+    // camelCase response
+    return res.status(201).json({
+      id: data.id,
+      roomId: data.room_id,
+      orgId: data.org_id,
+      title: data.title,
+      organizer: data.organizer,
+      startTime: data.start_time,
+      endTime: data.end_time,
+    });
+  } catch (err) {
+    console.error("Serverfout POST /api/meeting-bookings:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// DELETE vergaderreservering
+app.delete("/api/meeting-bookings/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const { data, error } = await supabase
+      .from("meeting_bookings")
+      .delete()
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase fout DELETE /api/meeting-bookings/:id:", error);
+      return res.status(500).json({ error: "Kon vergaderreservering niet verwijderen." });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Vergaderreservering niet gevonden" });
+    }
+
+    res.json({ success: true, deleted: data });
+  } catch (err) {
+    console.error("Serverfout DELETE /api/meeting-bookings/:id:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
 // ---- START SERVER ----
 app.listen(PORT, () => {
   console.log(`✅ Poolauto app draait op http://localhost:${PORT}`);
