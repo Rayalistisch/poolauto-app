@@ -668,24 +668,27 @@
   <div class="app">
     <!-- LOGIN SCHERM -->
     <section id="loginScreen" class="login-screen">
-      <div>
-        <div class="login-title">Wagenpark beheer</div>
-        <div class="login-subtitle">
-          Log in met de code van jouw organisatie om de poolauto's te beheren.
+      <!-- STAP 1: Organisatiecode -->
+      <div id="loginStep1">
+        <div>
+          <div class="login-title">Wagenpark beheer</div>
+          <div class="login-subtitle">
+            Log in met de code van jouw organisatie om de poolauto's te beheren.
+          </div>
         </div>
-      </div>
-      <div class="login-card">
-        <form id="loginForm">
-          <label class="login-label" for="orgCodeInput">Organisatiecode</label>
-          <input
-            id="orgCodeInput"
-            class="login-input"
-            type="text"
-            placeholder="Voer organisatiecode in"
-            autocomplete="off"
-          />
-          <button class="login-button" type="submit">Inloggen</button>
-          <div id="loginMessage" class="login-message"></div>
+        <div class="login-card">
+          <form id="orgCodeForm">
+            <label class="login-label" for="orgCodeInput">Organisatiecode</label>
+            <input
+              id="orgCodeInput"
+              class="login-input"
+              type="text"
+              placeholder="Voer organisatiecode in"
+              autocomplete="off"
+            />
+            <button class="login-button" type="submit">Volgende</button>
+            <div id="orgCodeMessage" class="login-message"></div>
+          </form>
 
           <div class="install-app-box">
             <div class="install-title">📱 App lokaal op je telefoon zetten</div>
@@ -712,7 +715,80 @@
               De app opent daarna als een echte mobiele app zonder browserbalk.
             </div>
           </div>
-        </form>
+        </div>
+      </div>
+
+      <!-- STAP 2: Inloggen of Registreren -->
+      <div id="loginStep2" class="hidden">
+        <div>
+          <div class="login-title" id="loginOrgTitle">Organisatie</div>
+          <div class="login-subtitle">
+            Log in met je account of maak een nieuw account aan.
+          </div>
+        </div>
+        <div class="login-card">
+          <!-- Tab knoppen -->
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button type="button" id="tabLoginBtn" class="login-tab-btn active" style="flex:1; padding: 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer;">Inloggen</button>
+            <button type="button" id="tabRegisterBtn" class="login-tab-btn" style="flex:1; padding: 8px; border-radius: 999px; border: 1px solid var(--border); background: white; color: var(--text-main); font-weight: 600; cursor: pointer;">Registreren</button>
+          </div>
+
+          <!-- Login Form -->
+          <form id="userLoginForm">
+            <label class="login-label" for="loginEmail">E-mailadres</label>
+            <input
+              id="loginEmail"
+              class="login-input"
+              type="email"
+              placeholder="jan@voorbeeld.nl"
+              autocomplete="email"
+            />
+            <label class="login-label" for="loginPassword">Wachtwoord</label>
+            <input
+              id="loginPassword"
+              class="login-input"
+              type="password"
+              placeholder="Wachtwoord"
+              autocomplete="current-password"
+            />
+            <button class="login-button" type="submit">Inloggen</button>
+            <div id="loginMessage" class="login-message"></div>
+          </form>
+
+          <!-- Register Form (hidden by default) -->
+          <form id="userRegisterForm" class="hidden">
+            <label class="login-label" for="registerName">Naam</label>
+            <input
+              id="registerName"
+              class="login-input"
+              type="text"
+              placeholder="Je naam"
+              autocomplete="name"
+            />
+            <label class="login-label" for="registerEmail">E-mailadres</label>
+            <input
+              id="registerEmail"
+              class="login-input"
+              type="email"
+              placeholder="jan@voorbeeld.nl"
+              autocomplete="email"
+            />
+            <label class="login-label" for="registerPassword">Wachtwoord</label>
+            <input
+              id="registerPassword"
+              class="login-input"
+              type="password"
+              placeholder="Minimaal 8 tekens"
+              autocomplete="new-password"
+            />
+            <button class="login-button" type="submit">Account aanmaken</button>
+            <div id="registerMessage" class="login-message"></div>
+          </form>
+
+          <button type="button" id="backToOrgBtn" style="margin-top: 16px; padding: 8px; background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; text-decoration: underline;">
+            ← Andere organisatie
+          </button>
+        </div>
       </div>
     </section>
 
@@ -724,6 +800,7 @@
           <div class="header-left-title">Vandaag</div>
           <div class="header-left-date" id="headerDateText"></div>
           <div class="header-left-org" id="headerOrgName"></div>
+          <div class="header-left-user" id="headerUserName" style="font-size: 12px; opacity: 0.85; margin-top: 2px;"></div>
         </div>
 
         <div class="header-glass">
@@ -915,6 +992,12 @@
 
   let currentOrgId = localStorage.getItem("poolauto_orgId");
   let currentOrgName = localStorage.getItem("poolauto_orgName");
+  let currentToken = localStorage.getItem("poolauto_token");
+  let currentUser = JSON.parse(localStorage.getItem("poolauto_user") || "null");
+
+  // Pending org (tijdens login flow stap 1 → 2)
+  let pendingOrgId = null;
+  let pendingOrgName = null;
   let allCars = [];
 
   let extraCarsToday = [];
@@ -924,17 +1007,36 @@
 
   const loginScreen = document.getElementById("loginScreen");
   const mainApp = document.getElementById("mainApp");
-  const loginForm = document.getElementById("loginForm");
-  const orgCodeInput = document.getElementById("orgCodeInput");
-  const loginMessage = document.getElementById("loginMessage");
-
   const logoutBtn = document.getElementById("logoutBtn");
+
+  // Login stap 1: Org code
+  const loginStep1 = document.getElementById("loginStep1");
+  const orgCodeForm = document.getElementById("orgCodeForm");
+  const orgCodeInput = document.getElementById("orgCodeInput");
+  const orgCodeMessage = document.getElementById("orgCodeMessage");
+
+  // Login stap 2: User login/register
+  const loginStep2 = document.getElementById("loginStep2");
+  const loginOrgTitle = document.getElementById("loginOrgTitle");
+  const tabLoginBtn = document.getElementById("tabLoginBtn");
+  const tabRegisterBtn = document.getElementById("tabRegisterBtn");
+  const userLoginForm = document.getElementById("userLoginForm");
+  const userRegisterForm = document.getElementById("userRegisterForm");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const loginMessage = document.getElementById("loginMessage");
+  const registerName = document.getElementById("registerName");
+  const registerEmail = document.getElementById("registerEmail");
+  const registerPassword = document.getElementById("registerPassword");
+  const registerMessage = document.getElementById("registerMessage");
+  const backToOrgBtn = document.getElementById("backToOrgBtn");
 
   const daysContainer = document.getElementById("daysContainer");
   const meetingDaysContainer = document.getElementById("meetingDaysContainer");
   const weekTitle = document.getElementById("weekTitle");
   const headerDateText = document.getElementById("headerDateText");
   const headerOrgNameEl = document.getElementById("headerOrgName");
+  const headerUserNameEl = document.getElementById("headerUserName");
 
   const todayCarsSelect = document.getElementById("todayCarsSelect");
 
@@ -989,6 +1091,25 @@
 
   // -------- UTILITIES --------
 
+  // Helper voor API calls met token
+  function authHeaders() {
+    const headers = { "Content-Type": "application/json" };
+    if (currentToken) {
+      headers["Authorization"] = "Bearer " + currentToken;
+    }
+    return headers;
+  }
+
+  // Helper: kan gebruiker deze booking verwijderen?
+  function canDeleteBooking(booking) {
+    if (!currentUser) return false;
+    // Admin kan alles verwijderen
+    if (currentUser.role === "admin") return true;
+    // Eigenaar kan eigen booking verwijderen
+    if (booking.userId === currentUser.id) return true;
+    return false;
+  }
+
   function isoDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -1039,6 +1160,7 @@
     const now = new Date();
     headerDateText.textContent = formatNLDate(now);
     headerOrgNameEl.textContent = currentOrgName || "";
+    headerUserNameEl.textContent = currentUser ? `Ingelogd als: ${currentUser.name}` : "";
   }
 
   // -------- MEETING ROOMS DATA --------
@@ -1213,7 +1335,7 @@
       try {
         const res = await fetch(API_BASE + "/api/extra-cars", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders(),
           body: JSON.stringify({
             orgId: Number(currentOrgId),
             license,
@@ -1547,6 +1669,7 @@ function injectExtraCarsIntoBookingSelect() {
             const plate = car ? car.license : `Auto #${b.carId}`;
             const carName = car ? car.name : "";
 
+            const showDelete = canDeleteBooking(b);
             card.innerHTML += `
               <div class="booking-item">
                 <div class="booking-label">
@@ -1557,7 +1680,7 @@ function injectExtraCarsIntoBookingSelect() {
                 </div>
                 <div class="booking-time">
                   ${range}
-                  <button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>
+                  ${showDelete ? `<button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>` : ""}
                 </div>
                 </div>
             `;
@@ -1622,6 +1745,7 @@ function injectExtraCarsIntoBookingSelect() {
               " – " +
               e.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 
+            const showDelete = canDeleteBooking(booking);
             card.innerHTML += `
               <div class="booking-item">
                 <div class="booking-label">
@@ -1632,7 +1756,7 @@ function injectExtraCarsIntoBookingSelect() {
                 </div>
                 <div class="booking-time">
                   ${timeRange}
-                  <button class="booking-delete-btn" onclick="deleteMeetingBooking(${booking.id})">×</button>
+                  ${showDelete ? `<button class="booking-delete-btn" onclick="deleteMeetingBooking(${booking.id})">×</button>` : ""}
                 </div>
               </div>
             `;
@@ -1649,7 +1773,10 @@ function injectExtraCarsIntoBookingSelect() {
   async function deleteBooking(id) {
     if (!confirm("Weet je zeker dat je deze reservering wilt verwijderen?")) return;
 
-    const res = await fetch(API_BASE + "/api/bookings/" + id, { method: "DELETE" });
+    const res = await fetch(API_BASE + "/api/bookings/" + id, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
 
     if (!res.ok) {
       alert("Verwijderen mislukt.");
@@ -1664,7 +1791,10 @@ function injectExtraCarsIntoBookingSelect() {
   async function deleteMeetingBooking(id) {
     if (!confirm("Weet je zeker dat je deze vergadering wilt verwijderen?")) return;
     
-    const res = await fetch(API_BASE + "/api/meeting-bookings/" + id, { method: "DELETE" });
+    const res = await fetch(API_BASE + "/api/meeting-bookings/" + id, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
 
     if (!res.ok) {
       alert("Verwijderen mislukt.");
@@ -1691,51 +1821,210 @@ function injectExtraCarsIntoBookingSelect() {
   function logout() {
     localStorage.removeItem("poolauto_orgId");
     localStorage.removeItem("poolauto_orgName");
+    localStorage.removeItem("poolauto_token");
+    localStorage.removeItem("poolauto_user");
     currentOrgId = null;
     currentOrgName = null;
+    currentToken = null;
+    currentUser = null;
+    pendingOrgId = null;
+    pendingOrgName = null;
     allCars = [];
     extraCarsToday = [];
     preferredExtraCarId = null;
     meetingRooms = [];
+    // Reset login forms
+    loginStep2.classList.add("hidden");
+    loginStep1.classList.remove("hidden");
+    orgCodeInput.value = "";
+    loginEmail.value = "";
+    loginPassword.value = "";
+    registerName.value = "";
+    registerEmail.value = "";
+    registerPassword.value = "";
     showLogin();
   }
 
   logoutBtn.addEventListener("click", logout);
 
-  loginForm.addEventListener("submit", async (e) => {
+  // -------- LOGIN STAP 1: Org Code --------
+  orgCodeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    orgCodeMessage.textContent = "";
+    orgCodeMessage.classList.remove("error");
+
+    const code = orgCodeInput.value.trim();
+    if (!code) {
+      orgCodeMessage.textContent = "Vul een organisatiecode in.";
+      orgCodeMessage.classList.add("error");
+      return;
+    }
+
+    try {
+      const res = await fetch(API_BASE + "/api/auth/verify-org", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        orgCodeMessage.textContent = data.error || "Onbekende organisatiecode.";
+        orgCodeMessage.classList.add("error");
+        return;
+      }
+
+      // Ga naar stap 2
+      pendingOrgId = data.orgId;
+      pendingOrgName = data.orgName;
+      loginOrgTitle.textContent = data.orgName;
+      loginStep1.classList.add("hidden");
+      loginStep2.classList.remove("hidden");
+    } catch (err) {
+      orgCodeMessage.textContent = "Verbindingsfout. Probeer opnieuw.";
+      orgCodeMessage.classList.add("error");
+    }
+  });
+
+  // -------- LOGIN STAP 2: Tab switching --------
+  tabLoginBtn.addEventListener("click", () => {
+    tabLoginBtn.style.background = "var(--accent)";
+    tabLoginBtn.style.color = "white";
+    tabRegisterBtn.style.background = "white";
+    tabRegisterBtn.style.color = "var(--text-main)";
+    userLoginForm.classList.remove("hidden");
+    userRegisterForm.classList.add("hidden");
+  });
+
+  tabRegisterBtn.addEventListener("click", () => {
+    tabRegisterBtn.style.background = "var(--accent)";
+    tabRegisterBtn.style.color = "white";
+    tabLoginBtn.style.background = "white";
+    tabLoginBtn.style.color = "var(--text-main)";
+    userRegisterForm.classList.remove("hidden");
+    userLoginForm.classList.add("hidden");
+  });
+
+  // -------- LOGIN STAP 2: User Login --------
+  userLoginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     loginMessage.textContent = "";
     loginMessage.classList.remove("error");
 
-    const code = orgCodeInput.value.trim();
-    if (!code) {
-      loginMessage.textContent = "Vul een organisatiecode in.";
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
+
+    if (!email || !password) {
+      loginMessage.textContent = "Vul e-mailadres en wachtwoord in.";
       loginMessage.classList.add("error");
       return;
     }
 
-    const res = await fetch(API_BASE + "/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
+    try {
+      const res = await fetch(API_BASE + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId: pendingOrgId, email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      loginMessage.textContent = data.error || "Ongeldige code.";
+      if (!res.ok) {
+        loginMessage.textContent = data.error || "Inloggen mislukt.";
+        loginMessage.classList.add("error");
+        return;
+      }
+
+      // Opslaan en doorgaan
+      currentOrgId = pendingOrgId;
+      currentOrgName = pendingOrgName;
+      currentToken = data.token;
+      currentUser = data.user;
+
+      localStorage.setItem("poolauto_orgId", currentOrgId);
+      localStorage.setItem("poolauto_orgName", currentOrgName);
+      localStorage.setItem("poolauto_token", currentToken);
+      localStorage.setItem("poolauto_user", JSON.stringify(currentUser));
+
+      showMainApp();
+      initApp();
+    } catch (err) {
+      loginMessage.textContent = "Verbindingsfout. Probeer opnieuw.";
       loginMessage.classList.add("error");
+    }
+  });
+
+  // -------- LOGIN STAP 2: User Register --------
+  userRegisterForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    registerMessage.textContent = "";
+    registerMessage.classList.remove("error");
+
+    const name = registerName.value.trim();
+    const email = registerEmail.value.trim();
+    const password = registerPassword.value;
+
+    if (!name || !email || !password) {
+      registerMessage.textContent = "Vul alle velden in.";
+      registerMessage.classList.add("error");
       return;
     }
 
-    currentOrgId = data.orgId;
-    currentOrgName = data.name;
+    if (password.length < 8) {
+      registerMessage.textContent = "Wachtwoord moet minimaal 8 tekens bevatten.";
+      registerMessage.classList.add("error");
+      return;
+    }
 
-    localStorage.setItem("poolauto_orgId", currentOrgId);
-    localStorage.setItem("poolauto_orgName", currentOrgName);
+    try {
+      const res = await fetch(API_BASE + "/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId: pendingOrgId, name, email, password }),
+      });
 
-    showMainApp();
-    initApp();
+      const data = await res.json();
+
+      if (!res.ok) {
+        registerMessage.textContent = data.error || "Registratie mislukt.";
+        registerMessage.classList.add("error");
+        return;
+      }
+
+      // Opslaan en doorgaan
+      currentOrgId = pendingOrgId;
+      currentOrgName = pendingOrgName;
+      currentToken = data.token;
+      currentUser = data.user;
+
+      localStorage.setItem("poolauto_orgId", currentOrgId);
+      localStorage.setItem("poolauto_orgName", currentOrgName);
+      localStorage.setItem("poolauto_token", currentToken);
+      localStorage.setItem("poolauto_user", JSON.stringify(currentUser));
+
+      showMainApp();
+      initApp();
+    } catch (err) {
+      registerMessage.textContent = "Verbindingsfout. Probeer opnieuw.";
+      registerMessage.classList.add("error");
+    }
+  });
+
+  // -------- Terug naar stap 1 --------
+  backToOrgBtn.addEventListener("click", () => {
+    loginStep2.classList.add("hidden");
+    loginStep1.classList.remove("hidden");
+    pendingOrgId = null;
+    pendingOrgName = null;
+    // Reset forms
+    loginEmail.value = "";
+    loginPassword.value = "";
+    registerName.value = "";
+    registerEmail.value = "";
+    registerPassword.value = "";
+    loginMessage.textContent = "";
+    registerMessage.textContent = "";
   });
 
   // -------- FORM SUBMIT (car booking) --------
@@ -1772,7 +2061,7 @@ function injectExtraCarsIntoBookingSelect() {
 
     const res = await fetch(API_BASE + "/api/bookings", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
 
@@ -1821,7 +2110,7 @@ function injectExtraCarsIntoBookingSelect() {
 
     const res = await fetch(API_BASE + "/api/meeting-bookings", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
 
@@ -1947,11 +2236,19 @@ function injectExtraCarsIntoBookingSelect() {
   function openCarSheet() {
     carSheet.classList.add("open");
     sheetOverlay.classList.add("visible");
+    // Vul voornaam van ingelogde gebruiker in (bewerkbaar)
+    if (currentUser && currentUser.name) {
+      carUserNameInput.value = currentUser.name.split(" ")[0];
+    }
   }
 
   function openMeetingSheet() {
     meetingSheet.classList.add("open");
     sheetOverlay.classList.add("visible");
+    // Vul voornaam van ingelogde gebruiker in (bewerkbaar)
+    if (currentUser && currentUser.name) {
+      meetingOrganizerInput.value = currentUser.name.split(" ")[0];
+    }
   }
 
   function closeAllSheets() {
@@ -1986,12 +2283,33 @@ function injectExtraCarsIntoBookingSelect() {
     meetingSheet.style.overflowY = "auto";
   }
 
-  if (currentOrgId) {
-    showMainApp();
-    initApp();
-  } else {
-    showLogin();
+  // Startup: check of bestaande token nog geldig is
+  async function startup() {
+    if (currentOrgId && currentToken) {
+      // Valideer token bij server
+      try {
+        const res = await fetch(API_BASE + "/api/auth/me", {
+          headers: { "Authorization": "Bearer " + currentToken }
+        });
+        if (res.ok) {
+          // Token is geldig, ga naar app
+          showMainApp();
+          initApp();
+        } else {
+          // Token verlopen of ongeldig, log uit
+          logout();
+        }
+      } catch (err) {
+        // Netwerk fout, probeer toch (offline modus)
+        showMainApp();
+        initApp();
+      }
+    } else {
+      showLogin();
+    }
   }
+
+  startup();
 </script>
 
 </body>

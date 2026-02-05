@@ -5,6 +5,17 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+// --- JWT CONFIG ---
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
+const SALT_ROUNDS = 12;
+
+if (!JWT_SECRET) {
+  console.warn("⚠️ JWT_SECRET ontbreekt in .env - auth endpoints werken niet!");
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -85,7 +96,7 @@ function toDayEndIso(dateStr) {
 
 // ---- API ROUTES ----
 
-// Inloggen met organisatiecode (nog steeds via accounts.json)
+// Inloggen met organisatiecode (nog steeds via accounts.json) - LEGACY, blijft werken
 app.post("/api/login", (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: "Code is verplicht" });
@@ -98,6 +109,198 @@ app.post("/api/login", (req, res) => {
 
   res.json({ orgId: account.id, name: account.name });
 });
+
+//
+// ---------- NIEUWE AUTH ENDPOINTS (Fase 2) ----------
+//
+
+// Verify organization code (stap 1 van nieuwe login flow)
+app.post("/api/auth/verify-org", async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: "Code is verplicht" });
+
+  try {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("id, name")
+      .ilike("code", code)
+      .single();
+
+    if (error || !data) {
+      return res.status(401).json({ error: "Onbekende organisatiecode" });
+    }
+
+    res.json({ orgId: data.id, orgName: data.name });
+  } catch (err) {
+    console.error("Serverfout /api/auth/verify-org:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// Register new user (stap 2a van nieuwe login flow)
+app.post("/api/auth/register", async (req, res) => {
+  const { orgId, email, password, name } = req.body;
+
+  if (!orgId || !email || !password || !name) {
+    return res.status(400).json({ error: "Alle velden zijn verplicht" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Wachtwoord moet minimaal 8 tekens bevatten" });
+  }
+
+  const emailLower = email.toLowerCase().trim();
+  const nameTrimmed = name.trim();
+
+  try {
+    // Check of email al bestaat in deze org
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("email", emailLower)
+      .single();
+
+    if (existing) {
+      return res.status(409).json({ error: "E-mailadres is al geregistreerd" });
+    }
+
+    // Hash wachtwoord
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    // Insert nieuwe user
+    const { data: user, error } = await supabase
+      .from("users")
+      .insert([{
+        org_id: orgId,
+        email: emailLower,
+        password_hash: passwordHash,
+        name: nameTrimmed,
+        role: "user"
+      }])
+      .select("id, org_id, email, name, role")
+      .single();
+
+    if (error) {
+      console.error("Register error:", error);
+      return res.status(500).json({ error: "Kon account niet aanmaken" });
+    }
+
+    // Genereer JWT token
+    const token = jwt.sign({
+      userId: user.id,
+      orgId: user.org_id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        orgId: user.org_id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error("Serverfout /api/auth/register:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// Login existing user (stap 2b van nieuwe login flow)
+app.post("/api/auth/login", async (req, res) => {
+  const { orgId, email, password } = req.body;
+
+  if (!orgId || !email || !password) {
+    return res.status(400).json({ error: "Alle velden zijn verplicht" });
+  }
+
+  const emailLower = email.toLowerCase().trim();
+
+  try {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, org_id, email, name, role, password_hash")
+      .eq("org_id", orgId)
+      .eq("email", emailLower)
+      .single();
+
+    if (error || !user) {
+      return res.status(401).json({ error: "Onjuist e-mailadres of wachtwoord" });
+    }
+
+    // Verify wachtwoord
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Onjuist e-mailadres of wachtwoord" });
+    }
+
+    // Genereer JWT token
+    const token = jwt.sign({
+      userId: user.id,
+      orgId: user.org_id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        orgId: user.org_id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error("Serverfout /api/auth/login:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+// Get current user from token
+app.get("/api/auth/me", async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Geen toegangstoken meegegeven" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({
+      userId: decoded.userId,
+      orgId: decoded.orgId,
+      email: decoded.email,
+      name: decoded.name,
+      role: decoded.role
+    });
+  } catch (err) {
+    return res.status(401).json({ error: "Ongeldig of verlopen token" });
+  }
+});
+
+// Helper: Extract user from token (returns null if no/invalid token - for backwards compatibility)
+function getUserFromToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    return null;
+  }
+}
 
 //
 // ---------- EXTRA BESCHIKBARE AUTO'S (Supabase) ----------
@@ -430,9 +633,10 @@ app.get("/api/bookings", async (req, res) => {
     const normalized = (data || []).map((b) => ({
       id: b.id,
       orgId: b.org_id,
-      carId: b.car_id,                 // ✅ frontend verwacht carId
-      extraCarId: b.extra_car_id,      // ✅ frontend verwacht extraCarId (later)
-      userName: b.user_name,           // ✅ frontend verwacht userName
+      carId: b.car_id,
+      extraCarId: b.extra_car_id,
+      userId: b.user_id,  // Voor ownership check in frontend
+      userName: b.user_name,
       start: b.start,
       end: b.end,
       note: b.note,
@@ -453,6 +657,10 @@ app.post("/api/bookings", async (req, res) => {
   if (!userName || !start || !end) {
     return res.status(400).json({ error: "userName, start en end zijn verplicht" });
   }
+
+  // Haal user uit token als aanwezig (voor user_id koppeling)
+  const tokenUser = getUserFromToken(req);
+  const userId = tokenUser ? tokenUser.userId : null;
 
   const orgIdNum = Number(orgId);
   const startDate = new Date(start);
@@ -537,6 +745,7 @@ app.post("/api/bookings", async (req, res) => {
         org_id: orgIdNum,
         car_id: carIdNum,
         extra_car_id: null,
+        user_id: userId,  // Koppel aan user als ingelogd, anders null
         user_name: userName,
         start: startDate.toISOString(),
         end: endDate.toISOString(),
@@ -610,6 +819,7 @@ app.post("/api/bookings", async (req, res) => {
       org_id: orgIdNum,
       car_id: null,
       extra_car_id: extraIdNum,
+      user_id: userId,  // Koppel aan user als ingelogd, anders null
       user_name: userName,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
@@ -644,11 +854,45 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-// Reservering verwijderen
+// Reservering verwijderen (met ownership check)
 app.delete("/api/bookings/:id", async (req, res) => {
   const id = Number(req.params.id);
+  const tokenUser = getUserFromToken(req);
 
   try {
+    // Eerst de booking ophalen om ownership te checken
+    const { data: booking, error: fetchError } = await supabase
+      .from("bookings")
+      .select("id, user_id, org_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !booking) {
+      return res.status(404).json({ error: "Reservering niet gevonden" });
+    }
+
+    // Ownership check (alleen als er een token is)
+    if (tokenUser) {
+      const isOwner = booking.user_id === tokenUser.userId;
+      const isAdmin = tokenUser.role === "admin";
+      const isLegacy = booking.user_id === null;
+
+      // Legacy reserveringen (zonder user_id) kunnen alleen door admins verwijderd worden
+      // Eigen reserveringen kunnen altijd verwijderd worden
+      // Admins kunnen alles verwijderen
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          error: "Je kunt alleen je eigen reserveringen verwijderen"
+        });
+      }
+      if (isLegacy && !isAdmin) {
+        return res.status(403).json({
+          error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
+        });
+      }
+    }
+    // Geen token = oude flow (tijdelijk toegestaan voor backwards compatibility)
+
     const { data, error } = await supabase
       .from("bookings")
       .delete()
@@ -660,8 +904,6 @@ app.delete("/api/bookings/:id", async (req, res) => {
       console.error("Supabase fout DELETE /api/bookings/:id:", error);
       return res.status(500).json({ error: "Kon reservering niet verwijderen." });
     }
-
-    if (!data) return res.status(404).json({ error: "Reservering niet gevonden" });
 
     res.json({ success: true, deleted: data });
   } catch (err) {
@@ -750,6 +992,7 @@ app.get("/api/meeting-bookings", async (req, res) => {
       id: b.id,
       roomId: b.room_id,
       orgId: b.org_id,
+      userId: b.user_id,  // Voor ownership check in frontend
       title: b.title,
       organizer: b.organizer,
       startTime: b.start_time,
@@ -768,10 +1011,14 @@ app.post("/api/meeting-bookings", async (req, res) => {
   const { roomId, orgId, title, organizer, startTime, endTime } = req.body;
 
   if (!orgId || !roomId || !organizer || !startTime || !endTime) {
-    return res.status(400).json({ 
-      error: "orgId, roomId, organizer, startTime en endTime zijn verplicht" 
+    return res.status(400).json({
+      error: "orgId, roomId, organizer, startTime en endTime zijn verplicht"
     });
   }
+
+  // Haal user uit token als aanwezig (voor user_id koppeling)
+  const tokenUser = getUserFromToken(req);
+  const userId = tokenUser ? tokenUser.userId : null;
 
   const orgIdNum = Number(orgId);
   const roomIdNum = Number(roomId);
@@ -819,6 +1066,7 @@ app.post("/api/meeting-bookings", async (req, res) => {
     const insertPayload = {
       room_id: roomIdNum,
       org_id: orgIdNum,
+      user_id: userId,  // Koppel aan user als ingelogd, anders null
       title: title || null,
       organizer: organizer,
       start_time: start.toISOString(),
@@ -852,11 +1100,45 @@ app.post("/api/meeting-bookings", async (req, res) => {
   }
 });
 
-// DELETE vergaderreservering
+// DELETE vergaderreservering (met ownership check)
 app.delete("/api/meeting-bookings/:id", async (req, res) => {
   const id = Number(req.params.id);
+  const tokenUser = getUserFromToken(req);
 
   try {
+    // Eerst de booking ophalen om ownership te checken
+    const { data: booking, error: fetchError } = await supabase
+      .from("meeting_bookings")
+      .select("id, user_id, org_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !booking) {
+      return res.status(404).json({ error: "Vergaderreservering niet gevonden" });
+    }
+
+    // Ownership check (alleen als er een token is)
+    if (tokenUser) {
+      const isOwner = booking.user_id === tokenUser.userId;
+      const isAdmin = tokenUser.role === "admin";
+      const isLegacy = booking.user_id === null;
+
+      // Legacy reserveringen (zonder user_id) kunnen alleen door admins verwijderd worden
+      // Eigen reserveringen kunnen altijd verwijderd worden
+      // Admins kunnen alles verwijderen
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          error: "Je kunt alleen je eigen reserveringen verwijderen"
+        });
+      }
+      if (isLegacy && !isAdmin) {
+        return res.status(403).json({
+          error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
+        });
+      }
+    }
+    // Geen token = oude flow (tijdelijk toegestaan voor backwards compatibility)
+
     const { data, error } = await supabase
       .from("meeting_bookings")
       .delete()
@@ -867,10 +1149,6 @@ app.delete("/api/meeting-bookings/:id", async (req, res) => {
     if (error) {
       console.error("Supabase fout DELETE /api/meeting-bookings/:id:", error);
       return res.status(500).json({ error: "Kon vergaderreservering niet verwijderen." });
-    }
-
-    if (!data) {
-      return res.status(404).json({ error: "Vergaderreservering niet gevonden" });
     }
 
     res.json({ success: true, deleted: data });
