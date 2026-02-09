@@ -122,7 +122,7 @@ app.post("/api/auth/verify-org", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("organizations")
-      .select("id, name")
+      .select("id, name, allowed_sections, meeting_org_id")
       .ilike("code", code)
       .single();
 
@@ -130,7 +130,11 @@ app.post("/api/auth/verify-org", async (req, res) => {
       return res.status(401).json({ error: "Onbekende organisatiecode" });
     }
 
-    res.json({ orgId: data.id, orgName: data.name });
+    // Defaults: alle secties, eigen org voor meetings
+    const allowedSections = data.allowed_sections || ["cars", "meetings"];
+    const meetingOrgId = data.meeting_org_id || data.id;
+
+    res.json({ orgId: data.id, orgName: data.name, allowedSections, meetingOrgId });
   } catch (err) {
     console.error("Serverfout /api/auth/verify-org:", err);
     res.status(500).json({ error: "Interne serverfout." });
@@ -186,13 +190,25 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(500).json({ error: "Kon account niet aanmaken" });
     }
 
+    // Haal org settings op voor allowed_sections en meeting_org_id
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("allowed_sections, meeting_org_id")
+      .eq("id", orgId)
+      .single();
+
+    const allowedSections = org?.allowed_sections || ["cars", "meetings"];
+    const meetingOrgId = org?.meeting_org_id || orgId;
+
     // Genereer JWT token
     const token = jwt.sign({
       userId: user.id,
       orgId: user.org_id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      allowedSections,
+      meetingOrgId
     }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     res.status(201).json({
@@ -202,7 +218,9 @@ app.post("/api/auth/register", async (req, res) => {
         orgId: user.org_id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        allowedSections,
+        meetingOrgId
       }
     });
   } catch (err) {
@@ -239,13 +257,25 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Onjuist e-mailadres of wachtwoord" });
     }
 
+    // Haal org settings op voor allowed_sections en meeting_org_id
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("allowed_sections, meeting_org_id")
+      .eq("id", orgId)
+      .single();
+
+    const allowedSections = org?.allowed_sections || ["cars", "meetings"];
+    const meetingOrgId = org?.meeting_org_id || orgId;
+
     // Genereer JWT token
     const token = jwt.sign({
       userId: user.id,
       orgId: user.org_id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      allowedSections,
+      meetingOrgId
     }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     res.json({
@@ -255,7 +285,9 @@ app.post("/api/auth/login", async (req, res) => {
         orgId: user.org_id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        allowedSections,
+        meetingOrgId
       }
     });
   } catch (err) {

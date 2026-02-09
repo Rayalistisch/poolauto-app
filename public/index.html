@@ -994,10 +994,14 @@
   let currentOrgName = localStorage.getItem("poolauto_orgName");
   let currentToken = localStorage.getItem("poolauto_token");
   let currentUser = JSON.parse(localStorage.getItem("poolauto_user") || "null");
+  let allowedSections = JSON.parse(localStorage.getItem("poolauto_allowedSections") || '["cars", "meetings"]');
+  let meetingOrgId = localStorage.getItem("poolauto_meetingOrgId") || currentOrgId;
 
   // Pending org (tijdens login flow stap 1 → 2)
   let pendingOrgId = null;
   let pendingOrgName = null;
+  let pendingAllowedSections = null;
+  let pendingMeetingOrgId = null;
   let allCars = [];
 
   let extraCarsToday = [];
@@ -1164,18 +1168,20 @@
   }
 
   // -------- MEETING ROOMS DATA --------
-  
+
   async function fetchMeetingRooms() {
-    if (!currentOrgId) return [];
-    const params = new URLSearchParams({ orgId: currentOrgId });
+    const orgForMeetings = meetingOrgId || currentOrgId;
+    if (!orgForMeetings) return [];
+    const params = new URLSearchParams({ orgId: orgForMeetings });
     const res = await fetch(API_BASE + "/api/meeting-rooms?" + params.toString());
     const data = await res.json();
     return data || [];
   }
 
   async function fetchMeetingBookingsForDate(dateStr) {
-    if (!currentOrgId) return [];
-    const params = new URLSearchParams({ date: dateStr, orgId: currentOrgId });
+    const orgForMeetings = meetingOrgId || currentOrgId;
+    if (!orgForMeetings) return [];
+    const params = new URLSearchParams({ date: dateStr, orgId: orgForMeetings });
     const res = await fetch(API_BASE + "/api/meeting-bookings?" + params.toString());
     return await res.json();
   }
@@ -1823,12 +1829,18 @@ function injectExtraCarsIntoBookingSelect() {
     localStorage.removeItem("poolauto_orgName");
     localStorage.removeItem("poolauto_token");
     localStorage.removeItem("poolauto_user");
+    localStorage.removeItem("poolauto_allowedSections");
+    localStorage.removeItem("poolauto_meetingOrgId");
     currentOrgId = null;
     currentOrgName = null;
     currentToken = null;
     currentUser = null;
+    allowedSections = ["cars", "meetings"];
+    meetingOrgId = null;
     pendingOrgId = null;
     pendingOrgName = null;
+    pendingAllowedSections = null;
+    pendingMeetingOrgId = null;
     allCars = [];
     extraCarsToday = [];
     preferredExtraCarId = null;
@@ -1878,6 +1890,8 @@ function injectExtraCarsIntoBookingSelect() {
       // Ga naar stap 2
       pendingOrgId = data.orgId;
       pendingOrgName = data.orgName;
+      pendingAllowedSections = data.allowedSections || ["cars", "meetings"];
+      pendingMeetingOrgId = data.meetingOrgId || data.orgId;
       loginOrgTitle.textContent = data.orgName;
       loginStep1.classList.add("hidden");
       loginStep2.classList.remove("hidden");
@@ -1941,11 +1955,15 @@ function injectExtraCarsIntoBookingSelect() {
       currentOrgName = pendingOrgName;
       currentToken = data.token;
       currentUser = data.user;
+      allowedSections = data.user.allowedSections || pendingAllowedSections || ["cars", "meetings"];
+      meetingOrgId = data.user.meetingOrgId || pendingMeetingOrgId || currentOrgId;
 
       localStorage.setItem("poolauto_orgId", currentOrgId);
       localStorage.setItem("poolauto_orgName", currentOrgName);
       localStorage.setItem("poolauto_token", currentToken);
       localStorage.setItem("poolauto_user", JSON.stringify(currentUser));
+      localStorage.setItem("poolauto_allowedSections", JSON.stringify(allowedSections));
+      localStorage.setItem("poolauto_meetingOrgId", meetingOrgId);
 
       showMainApp();
       initApp();
@@ -1997,11 +2015,15 @@ function injectExtraCarsIntoBookingSelect() {
       currentOrgName = pendingOrgName;
       currentToken = data.token;
       currentUser = data.user;
+      allowedSections = data.user.allowedSections || pendingAllowedSections || ["cars", "meetings"];
+      meetingOrgId = data.user.meetingOrgId || pendingMeetingOrgId || currentOrgId;
 
       localStorage.setItem("poolauto_orgId", currentOrgId);
       localStorage.setItem("poolauto_orgName", currentOrgName);
       localStorage.setItem("poolauto_token", currentToken);
       localStorage.setItem("poolauto_user", JSON.stringify(currentUser));
+      localStorage.setItem("poolauto_allowedSections", JSON.stringify(allowedSections));
+      localStorage.setItem("poolauto_meetingOrgId", meetingOrgId);
 
       showMainApp();
       initApp();
@@ -2016,6 +2038,8 @@ function injectExtraCarsIntoBookingSelect() {
     loginStep2.classList.add("hidden");
     loginStep1.classList.remove("hidden");
     pendingOrgId = null;
+    pendingAllowedSections = null;
+    pendingMeetingOrgId = null;
     pendingOrgName = null;
     // Reset forms
     loginEmail.value = "";
@@ -2099,9 +2123,10 @@ function injectExtraCarsIntoBookingSelect() {
     const start = new Date(date + "T" + s);
     const end = new Date(date + "T" + t);
 
+    const orgForMeetings = meetingOrgId || currentOrgId;
     const payload = {
       roomId: Number(roomId),
-      orgId: Number(currentOrgId),
+      orgId: Number(orgForMeetings),
       title: title || null,
       organizer,
       startTime: start.toISOString(),
@@ -2178,6 +2203,20 @@ function injectExtraCarsIntoBookingSelect() {
   // -------- CHOICE MENU --------
 
   tabAdd.addEventListener("click", () => {
+    const hasCars = allowedSections.includes("cars");
+    const hasMeetings = allowedSections.includes("meetings");
+
+    // Als maar 1 optie beschikbaar, direct naar dat sheet
+    if (hasCars && !hasMeetings) {
+      choiceCar.click();
+      return;
+    }
+    if (!hasCars && hasMeetings) {
+      choiceMeeting.click();
+      return;
+    }
+
+    // Beide beschikbaar: toon keuzemenu
     openChoiceMenu();
   });
 
@@ -2262,20 +2301,43 @@ function injectExtraCarsIntoBookingSelect() {
 
   // -------- INIT APP --------
 
+  // Tabs tonen/verbergen op basis van allowedSections
+  function updateTabVisibility() {
+    const hasCars = allowedSections.includes("cars");
+    const hasMeetings = allowedSections.includes("meetings");
+
+    // Tab buttons verbergen/tonen
+    tabOverview.style.display = hasCars ? "" : "none";
+    tabCars.style.display = hasCars ? "" : "none";
+    tabMeeting.style.display = hasMeetings ? "" : "none";
+
+    // Als alleen meetings: standaard naar meeting tab
+    if (!hasCars && hasMeetings) {
+      setActiveTab("meeting");
+    }
+  }
+
   async function initApp() {
+    updateTabVisibility();
     updateHeaderToday();
     currentWeekAnchor = new Date();
     carFormDateInput.value = isoDate(new Date());
     meetingFormDateInput.value = isoDate(new Date());
 
+    const hasCars = allowedSections.includes("cars");
+    const hasMeetings = allowedSections.includes("meetings");
+
     allCars = [];
-    await ensureCarsLoaded();
+    if (hasCars) {
+      await ensureCarsLoaded();
+      await renderWeek();
+      await renderTodayExtraCarsDropdown();
+    }
 
-    meetingRooms = await fetchMeetingRooms();
-
-    await renderWeek();
-    await renderMeetingWeek();
-    await renderTodayExtraCarsDropdown();
+    if (hasMeetings) {
+      meetingRooms = await fetchMeetingRooms();
+      await renderMeetingWeek();
+    }
 
     carSheet.style.maxHeight = "78vh";
     carSheet.style.overflowY = "auto";
