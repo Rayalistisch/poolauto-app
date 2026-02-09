@@ -830,7 +830,7 @@
         </div>
 
         <div class="header-glass">
-          <div>
+          <div id="extraCarsDropdownWrap">
             <div class="glass-select-wrap">
               <select id="todayCarsSelect" class="glass-select">
                 <option value="">Vandaag: laden…</option>
@@ -2340,6 +2340,10 @@ function injectExtraCarsIntoBookingSelect() {
     tabOverview.style.display = hasCars ? "" : "none";
     tabCars.style.display = hasCars ? "" : "none";
     tabMeeting.style.display = hasMeetings ? "" : "none";
+
+    // Extra auto's dropdown verbergen als geen auto-toegang
+    const extraCarsWrap = document.getElementById("extraCarsDropdownWrap");
+    if (extraCarsWrap) extraCarsWrap.style.display = hasCars ? "" : "none";
 
     // Als alleen meetings: standaard naar meeting tab
     if (!hasCars && hasMeetings) {
