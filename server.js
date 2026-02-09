@@ -1019,11 +1019,24 @@ app.get("/api/meeting-bookings", async (req, res) => {
       return res.status(500).json({ error: "Kon vergaderreserveringen niet ophalen." });
     }
 
+    // Haal organisatienamen op voor source_org_ids
+    const sourceOrgIds = [...new Set((data || []).map(b => b.source_org_id).filter(Boolean))];
+    let orgNames = {};
+    if (sourceOrgIds.length > 0) {
+      const { data: orgs } = await supabase
+        .from("organizations")
+        .select("id, name")
+        .in("id", sourceOrgIds);
+      orgNames = (orgs || []).reduce((acc, o) => ({ ...acc, [o.id]: o.name }), {});
+    }
+
     // camelCase response
     const normalized = (data || []).map((b) => ({
       id: b.id,
       roomId: b.room_id,
       orgId: b.org_id,
+      sourceOrgId: b.source_org_id,
+      sourceOrgName: orgNames[b.source_org_id] || null,
       userId: b.user_id,  // Voor ownership check in frontend
       title: b.title,
       organizer: b.organizer,
@@ -1048,9 +1061,10 @@ app.post("/api/meeting-bookings", async (req, res) => {
     });
   }
 
-  // Haal user uit token als aanwezig (voor user_id koppeling)
+  // Haal user uit token als aanwezig (voor user_id en source_org koppeling)
   const tokenUser = getUserFromToken(req);
   const userId = tokenUser ? tokenUser.userId : null;
+  const sourceOrgId = tokenUser ? tokenUser.orgId : orgId; // Echte org van de user
 
   const orgIdNum = Number(orgId);
   const roomIdNum = Number(roomId);
@@ -1098,6 +1112,7 @@ app.post("/api/meeting-bookings", async (req, res) => {
     const insertPayload = {
       room_id: roomIdNum,
       org_id: orgIdNum,
+      source_org_id: Number(sourceOrgId), // Echte org van de user (voor weergave)
       user_id: userId,  // Koppel aan user als ingelogd, anders null
       title: title || null,
       organizer: organizer,
