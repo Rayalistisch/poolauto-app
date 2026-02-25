@@ -15,83 +15,49 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#10b981">
+  <meta name="theme-color" content="#e05430">
 
   <style>
+  /* ─── DESIGN TOKENS ──────────────────────── */
   :root {
-    --bg: #f3f4f6;
+    --bg: #f5f3f0;
     --card: #ffffff;
-    --accent: #3b82f6;
-    --accent-soft: #e0f2fe;
-    --accent-strong: #2563eb;
-    --text-main: #111827;
-    --text-muted: #6b7280;
-    --danger: #ef4444;
-    --success: #16a34a;
-    --border: #e5e7eb;
+    --accent: #e05430;
+    --accent-light: #fef1eb;
+    --accent-mid: #f07050;
+    --accent-dark: #c0421e;
+    --text: #18181b;
+    --muted: #71717a;
+    --subtle: #a1a1aa;
+    --border: #e4e4e7;
+    --danger: #dc2626;
+    --success: #15803d;
+    --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
+    --shadow-md: 0 4px 20px rgba(0,0,0,.09);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,.14);
+    --r-xs: 8px;
+    --r-sm: 12px;
+    --r-md: 16px;
+    --r-lg: 20px;
+    --r-xl: 26px;
+    --r-full: 9999px;
   }
 
-  * { box-sizing: border-box; }
-
-  /* GLASS DROPDOWN (header) */
-  .header-glass {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .glass-select-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .glass-select {
-    -webkit-appearance: none;
-    appearance: none;
-    border: 1px solid rgba(255,255,255,0.35);
-    background: rgba(255,255,255,0.18);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: #fff;
-    border-radius: 999px;
-    padding: 8px 34px 8px 12px;
-    font-size: 1.0rem!important;
-    font-weight: 400;
-    cursor: pointer;
-    outline: none;
-    max-width: 230px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  .glass-select option { color: #111827; }
-
-  .glass-select:focus {
-    border-color: rgba(255,255,255,0.65);
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.18);
-  }
-
-  .glass-caret {
-    position: absolute;
-    right: 10px;
-    pointer-events: none;
-    opacity: 0.9;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--bg);
-    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
   }
 
   .app {
     max-width: 480px;
     margin: 0 auto;
     min-height: 100vh;
-    background-color: #f9fafb;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -108,348 +74,644 @@
 
   .hidden { display: none; }
 
-  /* LOGIN */
+  /* ─── LOGIN ──────────────────────────────── */
   .login-screen {
     flex: 1;
-    padding: 32px 20px;
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 0 20px 48px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 20px;
   }
-  .login-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+
+  .login-hero {
+    padding: 56px 0 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .login-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+
+  .login-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    line-height: 1.15;
+  }
+
   .login-subtitle {
-    font-size: 13px;
-    color: var(--text-muted);
-    max-width: 280px;
-    margin-bottom: 20px;
-    margin-top: 20px;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-top: 8px;
   }
+
   .login-card {
-    background-color: #ffffff;
-    border-radius: 18px;
-    padding: 16px;
-    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.12);
+    background: var(--card);
+    border-radius: var(--r-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-md);
   }
-  .login-label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+
+  .login-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
   .login-input {
     width: 100%;
-    padding: 8px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    font-size: 14px;
+    padding: 11px 14px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border);
+    font-size: 15px;
     outline: none;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
   }
-  .login-input:focus { border-color: var(--accent); }
+  .login-input:focus { border-color: var(--accent); background: #fff; }
+
   .login-button {
     width: 100%;
-    padding: 9px 10px;
-    border-radius: 999px;
+    padding: 12px;
+    border-radius: var(--r-sm);
     border: none;
-    background-color: #e56a54;
-    color: #ffffff;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s;
+    letter-spacing: 0.1px;
+  }
+  .login-button:hover { background: var(--accent-dark); }
+  .login-button:active { background: var(--accent-dark); transform: scale(0.99); }
+
+  .login-message { font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .login-message.error { color: var(--danger); }
+
+  /* Login tabs (stap 2) */
+  .login-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--bg);
+    border-radius: var(--r-sm);
+    padding: 4px;
+  }
+
+  .login-tab-btn {
+    flex: 1;
+    padding: 9px;
+    border-radius: calc(var(--r-sm) - 2px);
+    border: none;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 4px;
-  }
-  .login-button:hover { background-color: #f85c41; }
-  .login-message { font-size: 11px; margin-top: 6px; }
-  .login-message.error { color: var(--danger); }
-
-  .install-app-box {
-    margin-top: 20px;
-    padding: 14px 18px;
-    background: #ffffff;
-    border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    text-align: left;
-    font-size: 14px;
-    line-height: 1.45;
-  }
-  .install-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
-  .install-step { margin-bottom: 12px; }
-  .install-step ol { margin: 6px 0 0 18px; padding: 0; }
-  .install-step li { margin-bottom: 4px; }
-  .install-footer { margin-top: 8px; font-size: 12px; color: #6b7280; }
-
-  /* HEADER */
-  .header-gradient {
-    padding: 16px 20px 12px;
-    background: linear-gradient(135deg, #e56a54, #f27761, #f29281);
-    color: #ffffff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-  }
-  .header-left-title { font-size: 22px; font-weight: 600; }
-  .header-left-date { font-size: 13px; opacity: 0.9; margin-top: 2px; }
-  .header-left-org { font-size: 13px; opacity: 0.9; margin-top: 1px; }
-
-  .logout-btn {
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.15s;
     background: transparent;
-    color: #ffffff;
-    font-size: 1.0rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
+    color: var(--muted);
   }
-  .logout-btn::before { content: "⎋"; font-size: 13px; }
-  .logout-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: #ffffff;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  .login-tab-btn.active {
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow-xs);
   }
 
-  /* WEEK BAR */
-  .week-bar {
-    background-color: #f9fafb;
-    padding: 10px 16px 8px;
-    border-bottom: 1px solid var(--border);
+  .login-back-btn {
+    margin-top: 16px;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .login-back-btn:hover { color: var(--text); }
+
+  /* Install box */
+  .install-app-box {
+    margin-top: 16px;
+    padding: 18px;
+    background: var(--card);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .install-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
     align-items: center;
     gap: 8px;
+    color: var(--text);
   }
-  .week-info-range { font-size: 13px; font-weight: 500; }
-  .week-nav-buttons { display: flex; gap: 4px; }
-  .week-nav-buttons button {
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background-color: #ffffff;
+  .install-step { margin-bottom: 14px; }
+  .install-step:last-of-type { margin-bottom: 0; }
+  .install-step strong { color: var(--text); }
+  .install-step ol { margin: 6px 0 0 18px; padding: 0; }
+  .install-step li { margin-bottom: 5px; font-size: 13px; color: var(--muted); }
+  .install-footer { margin-top: 12px; font-size: 12px; color: var(--subtle); border-top: 1px solid var(--border); padding-top: 10px; }
+
+  /* ─── HEADER ─────────────────────────────── */
+  .header-gradient {
+    padding: 18px 18px 16px;
+    background: linear-gradient(150deg, #bf3e1c 0%, #e05430 45%, #f07050 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .header-label {
     font-size: 11px;
-    padding: 6px 10px;
-    color: var(--text-muted);
-    cursor: pointer;
+    font-weight: 600;
+    opacity: 0.55;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
   }
-  .week-nav-buttons button:hover { border-color: var(--accent); color: var(--accent-strong); }
 
-  /* CONTENT */
-  .content {
-    flex: 1;
-    padding: 8px 12px 120px;
-    overflow-y: auto;
-    margin-top: 15px;
+  .header-weekday {
+    font-size: 15px;
+    font-weight: 500;
+    opacity: 0.75;
+    text-transform: capitalize;
+    line-height: 1;
   }
-  .section-title { font-size: 13px; color: var(--text-muted); margin: 4px 4px 8px; }
 
-  /* DAY LIST */
-  .day-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
-  .day-date-column {
-    width: 50px;
+  .header-left-date {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+
+  .header-meta-row {
+    display: flex;
     align-items: center;
-    display: flex;
-    flex-direction: column;
-    padding-top: 6px;
-  }
-  .day-date-number { font-size: 17px; font-weight: 600; color: var(--text-main); }
-  .day-date-month { font-size: 11px; color: var(--text-muted); }
-
-  .day-card {
-    flex: 1;
-    margin-left: 8px;
-    border-radius: 14px;
-    background-color: var(--card);
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
     gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    flex-wrap: wrap;
   }
-  .day-card.highlight { background-color: var(--accent); color: #ffffff; }
-  .day-card-header { display: flex; justify-content: space-between; align-items: center; }
-  .day-card-title { font-size: 14px; font-weight: 600; }
-  .day-card-sub { font-size: 11px; color: var(--text-muted); }
-  .day-card.highlight .day-card-sub { color: #dbeafe; }
 
-  .booking-item {
-    margin-top: 4px;
-    padding: 8px 9px;
-    border-radius: 10px;
-    background-color: #f3f4f6;
+  .header-org {
+    opacity: 0.9;
+  }
+
+  .header-sep {
+    opacity: 0.4;
+    font-size: 11px;
+  }
+
+  .header-user {
+    opacity: 0.65;
+  }
+
+  /* Glass dropdown */
+  .header-glass {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .glass-select-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .glass-select {
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.14);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    border-radius: var(--r-full);
+    padding: 7px 30px 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    max-width: 190px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .glass-select option { color: #18181b; }
+  .glass-select:focus { border-color: rgba(255,255,255,0.6); }
+
+  .glass-caret {
+    position: absolute;
+    right: 9px;
+    pointer-events: none;
+    opacity: 0.75;
+    font-size: 11px;
+  }
+
+  .logout-btn {
+    padding: 6px 13px;
+    border-radius: var(--r-full);
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.85;
+  }
+  .logout-btn::before { content: "⎋"; font-size: 11px; }
+  .logout-btn:hover { background: rgba(255,255,255,0.2); opacity: 1; }
+
+  /* ─── WEEK BAR ───────────────────────────── */
+  .week-bar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 11px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
   }
-  .day-card.highlight .booking-item { background-color: rgba(15, 23, 42, 0.25); color: #e5e7eb; }
-  .booking-label { flex: 1; margin-right: 6px; }
-  .booking-time { font-weight: 600; font-size: 12px; white-space: nowrap; text-align: right; }
-  .booking-empty { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-  .day-card.highlight .booking-empty { color: #e5e7eb; }
+
+  .week-info-range {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .week-nav-buttons { display: flex; gap: 4px; }
+
+  .week-nav-buttons button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: var(--r-xs);
+    font-size: 12px;
+    padding: 5px 12px;
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.12s;
+  }
+  .week-nav-buttons button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  /* ─── CONTENT ────────────────────────────── */
+  .content {
+    flex: 1;
+    padding: 16px 14px 120px;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--subtle);
+    margin: 0 2px 14px;
+  }
+
+  /* ─── DAY LIST ───────────────────────────── */
+  .day-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .day-date-column {
+    width: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 12px;
+    flex-shrink: 0;
+  }
+
+  .day-date-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .day-date-month {
+    font-size: 11px;
+    color: var(--subtle);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .day-row.today .day-date-number { color: var(--accent); }
+  .day-row.today .day-date-month { color: var(--accent-mid); }
+
+  /* ─── DAY CARDS ──────────────────────────── */
+  .day-card {
+    flex: 1;
+    margin-left: 10px;
+    border-radius: var(--r-md);
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+    padding: 13px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .day-card.highlight {
+    background: var(--accent);
+    box-shadow: 0 4px 18px rgba(224,84,48,.28);
+  }
+
+  .day-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .day-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: capitalize;
+  }
+  .day-card.highlight .day-card-title { color: #fff; }
+
+  .day-card-sub {
+    font-size: 11px;
+    color: var(--subtle);
+    font-weight: 500;
+  }
+  .day-card.highlight .day-card-sub { color: rgba(255,255,255,0.6); }
+
+  .booking-empty {
+    font-size: 13px;
+    color: var(--subtle);
+    padding: 2px 0;
+  }
+  .day-card.highlight .booking-empty { color: rgba(255,255,255,0.55); }
+
+  /* ─── BOOKING ITEMS ──────────────────────── */
+  .booking-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+    background: var(--bg);
+  }
+  .day-card.highlight .booking-item { background: rgba(0,0,0,0.14); }
+
+  .booking-item-body { flex: 1; min-width: 0; }
+
+  .booking-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-left: 8px;
+  }
+
+  .booking-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .day-card.highlight .booking-time { color: rgba(255,255,255,0.9); }
+
+  .booking-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .day-card.highlight .booking-name { color: #fff; }
+
+  .booking-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .booking-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .day-card.highlight .booking-note { color: rgba(255,255,255,0.65); }
 
   .booking-delete-btn {
     border: none;
     background: none;
-    font-size: 16px;
+    color: var(--subtle);
     cursor: pointer;
-    color: #9ca3af;
-    margin-left: 6px;
+    padding: 3px;
+    flex-shrink: 0;
+    font-size: 15px;
+    line-height: 1;
+    border-radius: 5px;
+    transition: color 0.1s, background 0.1s;
+    margin-top: 1px;
   }
-  .booking-delete-btn:hover { color: #ef4444; }
+  .booking-delete-btn:hover { color: var(--danger); background: #fee2e2; }
+  .day-card.highlight .booking-delete-btn { color: rgba(255,255,255,0.4); }
+  .day-card.highlight .booking-delete-btn:hover { color: #fff; background: rgba(0,0,0,0.2); }
 
-  /* MEETING ROOM BADGE */
-  .room-badge {
+  /* ─── BADGES ─────────────────────────────── */
+  .plate {
     display: inline-block;
-    background: #8b5cf6;
-    color: #fff;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-weight: 600;
+    background: #ffd700;
+    color: #1a1a1a;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-weight: 800;
     font-size: 11px;
-    border: 1px solid #7c3aed;
-    margin-top: 6px;
+    letter-spacing: 0.8px;
+    border: 1.5px solid rgba(0,0,0,0.14);
+    font-family: system-ui, sans-serif;
   }
+  .plate.small { font-size: 10px; padding: 1px 5px; }
 
-  /* ORGANISATIE BADGE */
-  .org-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
+  .car-name-small {
+    font-size: 11px;
+    color: var(--muted);
     font-weight: 500;
+  }
+  .day-card.highlight .car-name-small { color: rgba(255,255,255,0.65); }
+
+  .room-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #7c3aed;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 600;
     font-size: 10px;
-    margin-left: 6px;
-  }
-  .org-badge.org-2 { /* Actifaid - Paars */
-    background: #ede9fe;
-    color: #5b21b6;
-    border: 1px solid #a78bfa;
-  }
-  .org-badge.org-3 { /* Samen Zorg Twente - Groen */
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #86efac;
-  }
-  .org-badge.org-default {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    letter-spacing: 0.2px;
   }
 
-/* BOTTOM NAV (modern floating glass) */
-.tab-bar{
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 16px;
+  .org-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .org-badge.org-2 { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+  .org-badge.org-3 { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .org-badge.org-default { background: #f4f4f5; color: #52525b; border: 1px solid #d4d4d8; }
 
-  width: calc(100% - 28px);
-  max-width: 460px;
-  height: 74px;
-
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-
-  border-radius: 26px;
-
-  background: rgba(255,255,255,0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  border: 1px solid rgba(255,255,255,0.65);
-
-  box-shadow:
-    0 14px 34px rgba(15,23,42,.18),
-    inset 0 1px 0 rgba(255,255,255,.7);
-
-  z-index: 50;
-}
-
-.tab-bar::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius: 26px;
-  background: linear-gradient(
-    120deg,
-    rgba(255,255,255,.75),
-    rgba(255,255,255,0) 42%
-  );
-  pointer-events:none;
-}
-
-.tab-btn{
-  flex: 1;
-  height: 100%;
-  border: none;
-  background: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  font-size: 11px;
-  color: #6b7280;
-  font-weight: 600;
-  transition: transform .18s ease, color .18s ease, opacity .18s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.tab-icon{
-  font-size: 26px;
-  transition: transform .18s ease, opacity .18s ease;
-}
-
-.tab-btn.active{
-  color: #ef8774;
-}
-
-.tab-btn.active .tab-icon{
-  transform: translateY(-2px) scale(1.06);
-}
-
-.tab-btn-add{
-  flex: 1;
-}
-
-.tab-btn-add .add-circle{
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #e76c56, #ffc5ba);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -34px;
-  transition: transform .18s ease;
-}
-
-.tab-btn-add:active .add-circle{
-  transform: scale(.92);
-}
-
-  /* CHOICE MENU */
-  .choice-menu {
+  /* ─── BOTTOM TAB BAR ─────────────────────── */
+  .tab-bar {
     position: fixed;
     left: 50%;
-    transform: translate(-50%, 110%);
-    bottom: 108px;
-    width: calc(100% - 28px);
+    transform: translateX(-50%);
+    bottom: 16px;
+    width: calc(100% - 24px);
     max-width: 460px;
-    background: rgba(255,255,255,0.98);
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 22px;
-    box-shadow: 0 -10px 30px rgba(15,23,42,.22);
-    padding: 16px;
-    z-index: 60;
-    transition: transform .28s cubic-bezier(.22,.61,.36,1);
-    visibility: hidden;
+    height: 72px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: var(--r-xl);
+    background: rgba(255,255,255,0.84);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), inset 0 1px 0 rgba(255,255,255,0.8);
+    z-index: 50;
+  }
+
+  .tab-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-xl);
+    background: linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 38%);
     pointer-events: none;
   }
 
+  .tab-btn {
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #a1a1aa;
+    letter-spacing: 0.2px;
+    transition: color 0.15s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tab-icon {
+    font-size: 24px;
+    transition: transform 0.15s;
+  }
+
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn.active .tab-icon { transform: translateY(-2px); }
+
+  .tab-btn-add { flex: 1; }
+  .tab-btn-add .add-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-full);
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -30px;
+    box-shadow: 0 4px 14px rgba(224,84,48,.38);
+    transition: transform 0.15s;
+  }
+  .tab-btn-add:active .add-circle { transform: scale(0.92); }
+
+  /* ─── CHOICE MENU ────────────────────────── */
+  .choice-menu {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 120%);
+    bottom: 106px;
+    width: calc(100% - 24px);
+    max-width: 460px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    z-index: 60;
+    transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+    visibility: hidden;
+    pointer-events: none;
+  }
   .choice-menu.open {
     transform: translate(-50%, 0);
     visibility: visible;
@@ -457,237 +719,309 @@
   }
 
   .choice-title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
     margin-bottom: 4px;
+    color: var(--text);
   }
-
   .choice-subtitle {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
   }
 
-  .choice-buttons {
-    display: flex;
-    gap: 12px;
-  }
+  .choice-buttons { display: flex; gap: 10px; }
 
   .choice-btn {
     flex: 1;
-    padding: 16px;
-    border-radius: 16px;
-    border: 2px solid var(--border);
-    background: #ffffff;
+    padding: 18px 12px;
+    border-radius: var(--r-md);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
   }
-
   .choice-btn:hover {
     border-color: var(--accent);
-    background: var(--accent-soft);
+    background: var(--accent-light);
     transform: translateY(-2px);
   }
+  .choice-btn-icon { font-size: 28px; color: var(--accent); }
+  .choice-btn-text { font-size: 13px; font-weight: 600; color: var(--text); }
 
-  .choice-btn-icon {
-    font-size: 32px;
-    color: var(--accent);
+  /* ─── BOTTOM SHEET ───────────────────────── */
+  .bottom-sheet {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 120%);
+    bottom: 106px;
+    width: calc(100% - 24px);
+    max-width: 460px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 18px 20px;
+    z-index: 60;
+    transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .bottom-sheet.open {
+    transform: translate(-50%, 0);
+    visibility: visible;
+    pointer-events: auto;
   }
 
-  .choice-btn-text {
-    font-size: 14px;
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .sheet-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .sheet-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .sheet-close {
+    border: none;
+    background: #f4f4f5;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--muted);
+    width: 30px;
+    height: 30px;
+    border-radius: var(--r-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.12s;
+  }
+  .sheet-close:hover { background: var(--border); color: var(--text); }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-size: 11px;
     font-weight: 600;
-    color: var(--text-main);
+    color: var(--muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  /* BOTTOM SHEET */
-.bottom-sheet{
-  position: fixed;
-  left: 50%;
-  transform: translate(-50%, 110%);
-  bottom: 108px;
-
-  width: calc(100% - 28px);
-  max-width: 460px;
-
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(15,23,42,.08);
-  border-radius: 22px;
-
-  box-shadow: 0 -10px 30px rgba(15,23,42,.22);
-
-  padding: 12px 14px 12px;
-  z-index: 60;
-
-  transition: transform .28s cubic-bezier(.22,.61,.36,1);
-
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.bottom-sheet.open{
-  transform: translate(-50%, 0);
-  visibility: visible;
-  pointer-events: auto;
-}
-
-  .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .sheet-title { font-size: 13px; font-weight: 600; }
-  .sheet-sub { font-size: 11px; color: var(--text-muted); }
-  .sheet-close { border: none; background: none; font-size: 18px; cursor: pointer; color: var(--text-muted); }
-
-
-  label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
   input, textarea, select {
     width: 100%;
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: var(--r-xs);
+    border: 1.5px solid var(--border);
+    font-size: 14px;
     outline: none;
-    margin-bottom: 6px;
-    background-color: #ffffff;
+    margin-bottom: 12px;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
   }
-  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
 
-  .sheet-row { display: flex; gap: 25px; margin-bottom: 6px; max-width: 96vw; }
+  .sheet-row { display: flex; gap: 12px; }
   .sheet-row > div { flex: 1; }
-  .sheet-row-times { flex-wrap: wrap; }
-  .sheet-row-times > div { flex: 1 1 150px; min-width: 150px; }
-  .sheet-row-times input { margin-bottom: 0; }
-
-  .sheet-date-input { background-color: #ffffff; max-width: 95vw; }
+  .sheet-row-times { flex-wrap: nowrap; }
+  .sheet-row-times > div { flex: 1 1 50%; }
+  .sheet-row-times input { margin-bottom: 12px; }
+  .sheet-date-input { background: var(--bg); }
 
   .sheet-button {
-    margin-top: 4px;
+    margin-top: 6px;
     width: 100%;
-    padding: 8px 10px;
-    border-radius: 999px;
-    border: none;
-    background: linear-gradient(45deg, #f29281, #ffb8ac);
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .sheet-button:hover { background-color: var(--accent-strong); }
-
-  .message { font-size: 11px; margin-bottom: 4px; }
-  .message.error { color: var(--danger); }
-  .message.success { color: var(--success); }
-
-  .sheet-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.4);
-    z-index: 25;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease-out;
-  }
-  .sheet-overlay.visible { opacity: 1; pointer-events: auto; }
-
-  /* Kenteken + kleine naam */
-  .plate {
-    display: inline-block;
-    background: #ffd800;
-    color: #111827;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 1px;
-    border: 2px solid #111827;
-    font-family: system-ui, sans-serif;
-  }
-  .plate.small { font-size: 11px; padding: 1px 6px; border-width: 1px; }
-  .car-name-small { font-size: 11px; color: #000; margin-left: 6px; font-weight: 600; }
-
-  /* AUTO BEHEER */
-  .car-section-info { font-size: 12px; color: var(--text-muted); margin: 0 12px 10px; }
-  .car-list { display: flex; flex-direction: column; gap: 10px; padding: 0 12px 80px; }
-  .car-card { background: var(--card); border-radius: 18px; padding: 12px 14px; box-shadow: 0  2px 8px rgba(15, 23, 42, 0.08); }
-
-  .car-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
-  .car-name { font-size: 14px; font-weight: 600; margin-top: 2px; }
-
-  .car-status-pill { font-size: 11px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-  .car-status-ok { background: var(--accent-soft); color: var(--accent-strong); }
-  .car-status-garage { background: #fee2e2; color: #b91c1c; }
-
-  .car-body { font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
-
-  .car-status-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 4px; }
-  .car-dates-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-  .car-dates-row > div { flex: 1 1 0; }
-  .car-dates-row label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; display: block; }
-  .car-dates-row input[type="date"] {
-    width: 90%;
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 13px;
-    outline: none;
-    box-sizing: border-box;
-    background-color: #ffffff;
-  }
-  .car-dates-row input[type="date"]:focus { border-color: var(--accent); }
-
-  .car-save-btn {
-    align-self: flex-start;
-    padding: 6px 12px;
-    border-radius: 999px;
+    padding: 12px;
+    border-radius: var(--r-sm);
     border: none;
     background: var(--accent);
     color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.1px;
+    transition: background 0.15s;
+  }
+  .sheet-button:hover { background: var(--accent-dark); }
+
+  .message {
     font-size: 12px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: var(--r-xs);
+    line-height: 1.4;
+  }
+  .message.error { color: var(--danger); background: #fef2f2; }
+  .message.success { color: var(--success); background: #f0fdf4; }
+
+  .car-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -8px;
+    margin-bottom: 10px;
+  }
+
+  /* ─── SHEET OVERLAY ──────────────────────── */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.28);
+    z-index: 25;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .sheet-overlay.visible { opacity: 1; pointer-events: auto; }
+
+  /* ─── CAR MANAGEMENT ─────────────────────── */
+  .car-section-info {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 2px 16px;
+    line-height: 1.6;
+  }
+
+  .car-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 80px;
+  }
+
+  .car-card {
+    background: var(--card);
+    border-radius: var(--r-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .car-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .car-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 5px;
+  }
+
+  .car-status-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: var(--r-full);
+    white-space: nowrap;
+  }
+  .car-status-ok { background: #dcfce7; color: #15803d; }
+  .car-status-garage { background: #fee2e2; color: #991b1b; }
+
+  .car-body { font-size: 13px; display: flex; flex-direction: column; gap: 12px; }
+
+  .car-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+  }
+  .car-status-row label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .car-dates-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .car-dates-row > div { flex: 1 1 0; }
+  .car-dates-row label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    display: block;
+  }
+  .car-dates-row input[type="date"] {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: var(--r-xs);
+    border: 1.5px solid var(--border);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .car-dates-row input[type="date"]:focus { border-color: var(--accent); background: #fff; }
+
+  .car-save-btn {
+    align-self: flex-start;
+    padding: 8px 18px;
+    border-radius: var(--r-sm);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 8px;
+    transition: background 0.15s;
   }
-  .car-save-btn:hover { background: var(--accent-strong); }
-  .car-message { font-size: 11px; margin-top: 4px; }
+  .car-save-btn:hover { background: var(--accent-dark); }
+
+  .car-message { font-size: 12px; margin-top: 4px; }
   .car-message.success { color: var(--success); }
   .car-message.error { color: var(--danger); }
-  .car-empty { font-size: 12px; color: var(--text-muted); padding: 0 12px 8px; }
+  .car-empty { font-size: 13px; color: var(--subtle); padding: 4px 2px; }
 
+  /* ─── MEDIA QUERIES ──────────────────────── */
   @media (max-width: 480px) {
     .car-dates-row { flex-direction: column; }
   }
 
   @media (min-width: 700px) {
     .app {
-      margin-top: 20px;
-      margin-bottom: 20px;
-      border-radius: 24px;
+      margin-top: 24px;
+      margin-bottom: 24px;
+      border-radius: var(--r-xl);
       overflow: hidden;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
   }
 
-  /* Voorkom iOS auto-zoom op invoervelden */
+  /* Voorkom iOS auto-zoom */
   @media (max-width: 768px) {
     input, textarea, select { font-size: 16px !important; }
   }
 
   @supports (padding: env(safe-area-inset-bottom)) {
-  .tab-bar{
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    .tab-bar { bottom: calc(16px + env(safe-area-inset-bottom)); }
+    .bottom-sheet, .choice-menu { bottom: calc(106px + env(safe-area-inset-bottom)); }
+    .content { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+    .app { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
   }
-  .bottom-sheet, .choice-menu{
-    bottom: calc(108px + env(safe-area-inset-bottom));
-  }
-  .content{
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
-  }
-  .app{
-    padding-bottom: calc(110px + env(safe-area-inset-bottom));
-  }
-}
   </style>
 </head>
 
@@ -697,10 +1031,11 @@
     <section id="loginScreen" class="login-screen">
       <!-- STAP 1: Organisatiecode -->
       <div id="loginStep1">
-        <div>
+        <div class="login-hero">
+          <div class="login-icon">🚗</div>
           <div class="login-title">Wagenpark beheer</div>
           <div class="login-subtitle">
-            Log in met de code van jouw organisatie om de poolauto's te beheren.
+            Log in met de code van jouw organisatie om de poolauto's te reserveren.
           </div>
         </div>
         <div class="login-card">
@@ -713,41 +1048,41 @@
               placeholder="Voer organisatiecode in"
               autocomplete="off"
             />
-            <button class="login-button" type="submit">Volgende</button>
+            <button class="login-button" type="submit">Volgende →</button>
             <div id="orgCodeMessage" class="login-message"></div>
           </form>
+        </div>
 
-          <div class="install-app-box">
-            <div class="install-title">📱 App lokaal op je telefoon zetten</div>
+        <div class="install-app-box">
+          <div class="install-title">📱 App op je telefoon zetten</div>
 
-            <div class="install-step">
-              <strong>iPhone (Safari):</strong>
-              <ol>
-                <li>Druk onderin op de <strong>deelknop</strong>.</li>
-                <li>Kies <strong>'Zet op beginscherm'</strong>.</li>
-                <li>Zorg dat <strong>Open als webapp</strong> aan staat.</li>
-              </ol>
-            </div>
+          <div class="install-step">
+            <strong>iPhone (Safari):</strong>
+            <ol>
+              <li>Druk onderin op de <strong>deelknop</strong>.</li>
+              <li>Kies <strong>'Zet op beginscherm'</strong>.</li>
+              <li>Zorg dat <strong>Open als webapp</strong> aan staat.</li>
+            </ol>
+          </div>
 
-            <div class="install-step">
-              <strong>Android (Chrome):</strong>
-              <ol>
-                <li>Open het menu rechtsboven (⋮).</li>
-                <li>Kies <strong>'Toevoegen aan startscherm'</strong>.</li>
-                <li>Bevestig met <strong>'Toevoegen'</strong>.</li>
-              </ol>
-            </div>
+          <div class="install-step">
+            <strong>Android (Chrome):</strong>
+            <ol>
+              <li>Open het menu rechtsboven (⋮).</li>
+              <li>Kies <strong>'Toevoegen aan startscherm'</strong>.</li>
+              <li>Bevestig met <strong>'Toevoegen'</strong>.</li>
+            </ol>
+          </div>
 
-            <div class="install-footer">
-              De app opent daarna als een echte mobiele app zonder browserbalk.
-            </div>
+          <div class="install-footer">
+            De app opent daarna als een echte mobiele app zonder browserbalk.
           </div>
         </div>
       </div>
 
       <!-- STAP 2: Inloggen of Registreren -->
       <div id="loginStep2" class="hidden">
-        <div>
+        <div class="login-hero">
           <div class="login-title" id="loginOrgTitle">Organisatie</div>
           <div class="login-subtitle">
             Log in met je account of maak een nieuw account aan.
@@ -755,9 +1090,9 @@
         </div>
         <div class="login-card">
           <!-- Tab knoppen -->
-          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-            <button type="button" id="tabLoginBtn" class="login-tab-btn active" style="flex:1; padding: 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer;">Inloggen</button>
-            <button type="button" id="tabRegisterBtn" class="login-tab-btn" style="flex:1; padding: 8px; border-radius: 999px; border: 1px solid var(--border); background: white; color: var(--text-main); font-weight: 600; cursor: pointer;">Registreren</button>
+          <div class="login-tabs">
+            <button type="button" id="tabLoginBtn" class="login-tab-btn active">Inloggen</button>
+            <button type="button" id="tabRegisterBtn" class="login-tab-btn">Registreren</button>
           </div>
 
           <!-- Login Form -->
@@ -811,11 +1146,11 @@
             <button class="login-button" type="submit">Account aanmaken</button>
             <div id="registerMessage" class="login-message"></div>
           </form>
-
-          <button type="button" id="backToOrgBtn" style="margin-top: 16px; padding: 8px; background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; text-decoration: underline;">
-            ← Andere organisatie
-          </button>
         </div>
+
+        <button type="button" id="backToOrgBtn" class="login-back-btn">
+          ← Andere organisatie
+        </button>
       </div>
     </section>
 
@@ -823,14 +1158,19 @@
     <div id="mainApp" class="hidden">
       <!-- HEADER -->
       <header class="header-gradient">
-        <div>
-          <div class="header-left-title">Vandaag</div>
+        <div class="header-left">
+          <span class="header-label">Vandaag</span>
+          <div class="header-weekday" id="headerWeekday"></div>
           <div class="header-left-date" id="headerDateText"></div>
-          <div class="header-left-org" id="headerOrgName"></div>
-          <div class="header-left-user" id="headerUserName" style="font-size: 12px; opacity: 0.85; margin-top: 2px;"></div>
+          <div class="header-meta-row">
+            <span class="header-org" id="headerOrgName"></span>
+            <span class="header-sep" id="headerMetaSep">·</span>
+            <span class="header-user" id="headerUserName"></span>
+          </div>
         </div>
 
-        <div class="header-glass">
+        <div class="header-right">
+          <button id="logoutBtn" class="logout-btn" type="button">Uitloggen</button>
           <div id="extraCarsDropdownWrap">
             <div class="glass-select-wrap">
               <select id="todayCarsSelect" class="glass-select">
@@ -839,10 +1179,6 @@
               <span class="glass-caret">▾</span>
             </div>
           </div>
-
-          <button id="logoutBtn" class="logout-btn" type="button">
-            Uitloggen
-          </button>
         </div>
       </header>
 
@@ -1066,6 +1402,8 @@
   const meetingDaysContainer = document.getElementById("meetingDaysContainer");
   const weekTitle = document.getElementById("weekTitle");
   const headerDateText = document.getElementById("headerDateText");
+  const headerWeekdayEl = document.getElementById("headerWeekday");
+  const headerMetaSep = document.getElementById("headerMetaSep");
   const headerOrgNameEl = document.getElementById("headerOrgName");
   const headerUserNameEl = document.getElementById("headerUserName");
 
@@ -1189,9 +1527,14 @@
 
   function updateHeaderToday() {
     const now = new Date();
-    headerDateText.textContent = formatNLDate(now);
+    const weekday = now.toLocaleDateString("nl-NL", { weekday: "long" });
+    const date = now.toLocaleDateString("nl-NL", { day: "numeric", month: "long" });
+    headerWeekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    headerDateText.textContent = date;
     headerOrgNameEl.textContent = currentOrgName || "";
-    headerUserNameEl.textContent = currentUser ? `Ingelogd als: ${currentUser.name}` : "";
+    const userName = currentUser ? currentUser.name : "";
+    headerUserNameEl.textContent = userName;
+    if (headerMetaSep) headerMetaSep.style.display = (currentOrgName && userName) ? "" : "none";
   }
 
   // -------- MEETING ROOMS DATA --------
@@ -1663,7 +2006,7 @@ function injectExtraCarsIntoBookingSelect() {
       const isToday = isoDate(date) === today;
 
       const row = document.createElement("div");
-      row.className = "day-row";
+      row.className = "day-row" + (isToday ? " today" : "");
 
       row.innerHTML = `
         <div class="day-date-column">
@@ -1680,12 +2023,12 @@ function injectExtraCarsIntoBookingSelect() {
       card.innerHTML = `
         <div class="day-card-header">
           <div class="day-card-title">${dayName}</div>
-          <div class="day-card-sub">${list.length ? list.length + " reservering(en)" : "Geen reserveringen"}</div>
+          <div class="day-card-sub">${list.length ? list.length + " reservering(en)" : "Vrij"}</div>
         </div>
       `;
 
       if (list.length === 0) {
-        card.innerHTML += `<div class="booking-empty">Nog geen reserveringen.</div>`;
+        card.innerHTML += `<div class="booking-empty">Geen reserveringen.</div>`;
       } else {
         list
           .sort((a, b) => new Date(a.start) - new Date(b.start))
@@ -1705,17 +2048,19 @@ function injectExtraCarsIntoBookingSelect() {
             const showDelete = canDeleteBooking(b);
             card.innerHTML += `
               <div class="booking-item">
-                <div class="booking-label">
-                  ${b.userName}${b.note ? " – " + b.note : ""}
-                  <br/>
-                  <span class="plate small">${plate}</span>
-                  ${carName ? `<span class="car-name-small">${carName}</span>` : ""}
+                <div class="booking-item-body">
+                  <div class="booking-name">${b.userName}</div>
+                  <div class="booking-meta">
+                    <span class="plate small">${plate}</span>
+                    ${carName ? `<span class="car-name-small">${carName}</span>` : ""}
+                  </div>
+                  ${b.note ? `<div class="booking-note">${b.note}</div>` : ""}
                 </div>
-                <div class="booking-time">
-                  ${range}
+                <div class="booking-item-right">
+                  <div class="booking-time">${range}</div>
                   ${showDelete ? `<button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>` : ""}
                 </div>
-                </div>
+              </div>
             `;
           });
       }
@@ -1741,7 +2086,7 @@ function injectExtraCarsIntoBookingSelect() {
       const isToday = isoDate(date) === today;
 
       const row = document.createElement("div");
-      row.className = "day-row";
+      row.className = "day-row" + (isToday ? " today" : "");
 
       row.innerHTML = `
         <div class="day-date-column">
@@ -1758,12 +2103,12 @@ function injectExtraCarsIntoBookingSelect() {
       card.innerHTML = `
         <div class="day-card-header">
           <div class="day-card-title">${dayName}</div>
-          <div class="day-card-sub">${bookings.length ? bookings.length + " vergadering(en)" : "Geen vergaderingen"}</div>
+          <div class="day-card-sub">${bookings.length ? bookings.length + " vergadering(en)" : "Vrij"}</div>
         </div>
       `;
 
       if (bookings.length === 0) {
-        card.innerHTML += `<div class="booking-empty">Nog geen vergaderingen gepland.</div>`;
+        card.innerHTML += `<div class="booking-empty">Geen vergaderingen gepland.</div>`;
       } else {
         bookings
           .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
@@ -1785,14 +2130,15 @@ function injectExtraCarsIntoBookingSelect() {
               : "";
             card.innerHTML += `
               <div class="booking-item">
-                <div class="booking-label">
-                  ${booking.title || 'Vergadering'}${orgBadge}
-                  <br/>
-                  <span class="room-badge">${roomName}</span>
-                  ${booking.organizer ? `<span class="car-name-small">${booking.organizer}</span>` : ""}
+                <div class="booking-item-body">
+                  <div class="booking-name">${booking.title || 'Vergadering'} ${orgBadge}</div>
+                  <div class="booking-meta">
+                    <span class="room-badge">${roomName}</span>
+                    ${booking.organizer ? `<span class="car-name-small">${booking.organizer}</span>` : ""}
+                  </div>
                 </div>
-                <div class="booking-time">
-                  ${timeRange}
+                <div class="booking-item-right">
+                  <div class="booking-time">${timeRange}</div>
                   ${showDelete ? `<button class="booking-delete-btn" onclick="deleteMeetingBooking(${booking.id})">×</button>` : ""}
                 </div>
               </div>
@@ -1934,19 +2280,15 @@ function injectExtraCarsIntoBookingSelect() {
 
   // -------- LOGIN STAP 2: Tab switching --------
   tabLoginBtn.addEventListener("click", () => {
-    tabLoginBtn.style.background = "var(--accent)";
-    tabLoginBtn.style.color = "white";
-    tabRegisterBtn.style.background = "white";
-    tabRegisterBtn.style.color = "var(--text-main)";
+    tabLoginBtn.classList.add("active");
+    tabRegisterBtn.classList.remove("active");
     userLoginForm.classList.remove("hidden");
     userRegisterForm.classList.add("hidden");
   });
 
   tabRegisterBtn.addEventListener("click", () => {
-    tabRegisterBtn.style.background = "var(--accent)";
-    tabRegisterBtn.style.color = "white";
-    tabLoginBtn.style.background = "white";
-    tabLoginBtn.style.color = "var(--text-main)";
+    tabRegisterBtn.classList.add("active");
+    tabLoginBtn.classList.remove("active");
     userRegisterForm.classList.remove("hidden");
     userLoginForm.classList.add("hidden");
   });
