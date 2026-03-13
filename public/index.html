@@ -1159,7 +1159,6 @@
       <!-- HEADER -->
       <header class="header-gradient">
         <div class="header-left">
-          <span class="header-label">Vandaag</span>
           <div class="header-weekday" id="headerWeekday"></div>
           <div class="header-left-date" id="headerDateText"></div>
           <div class="header-meta-row">
@@ -2202,6 +2201,7 @@ function injectExtraCarsIntoBookingSelect() {
   }
 
   function logout() {
+    stopAutoRefresh();
     localStorage.removeItem("poolauto_orgId");
     localStorage.removeItem("poolauto_orgName");
     localStorage.removeItem("poolauto_token");
@@ -2720,7 +2720,41 @@ function injectExtraCarsIntoBookingSelect() {
     carSheet.style.overflowY = "auto";
     meetingSheet.style.maxHeight = "78vh";
     meetingSheet.style.overflowY = "auto";
+
+    startAutoRefresh();
   }
+
+  // -------- AUTO-REFRESH (live updates) --------
+
+  let refreshInterval = null;
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    refreshInterval = setInterval(async () => {
+      if (!currentOrgId) return;
+      const hasCars = allowedSections.includes("cars");
+      const hasMeetings = allowedSections.includes("meetings");
+      if (hasCars) await renderWeek();
+      if (hasMeetings && !meetingSection.classList.contains("hidden")) await renderMeetingWeek();
+    }, 30000); // elke 30 seconden
+  }
+
+  function stopAutoRefresh() {
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
+  }
+
+  // Refresh wanneer app weer zichtbaar wordt (tab-switch, telefoon ontgrendelen)
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && currentOrgId) {
+      const hasCars = allowedSections.includes("cars");
+      const hasMeetings = allowedSections.includes("meetings");
+      if (hasCars) await renderWeek();
+      if (hasMeetings && !meetingSection.classList.contains("hidden")) await renderMeetingWeek();
+    }
+  });
 
   // Startup: check of bestaande token nog geldig is
   async function startup() {
