@@ -104,6 +104,21 @@ function loadAccounts() {
 }
 loadAccounts();
 
+// Helper: verlopen garage-periodes automatisch terugzetten naar 'ok'
+async function autoResetExpiredGarage() {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("cars")
+    .update({ status: "ok", unavailable_from: null, unavailable_until: null })
+    .eq("status", "garage")
+    .not("unavailable_until", "is", null)
+    .lt("unavailable_until", now);
+
+  if (error) {
+    console.error("Fout bij auto-reset garage:", error);
+  }
+}
+
 // Helper overlap
 function isOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
@@ -464,6 +479,7 @@ app.post("/api/extra-cars", async (req, res) => {
 // Alle auto's uit Supabase (incl. status + garage-periode)
 app.get("/api/cars", async (req, res) => {
   try {
+    await autoResetExpiredGarage();
     const { data, error } = await supabase
       .from("cars")
       .select("id, name, license, status, unavailable_from, unavailable_until")
@@ -557,6 +573,8 @@ app.get("/api/cars/availability", async (req, res) => {
   if (!start || !end || !orgId) {
     return res.status(400).json({ error: "start, end en orgId zijn verplicht" });
   }
+
+  await autoResetExpiredGarage();
 
   const orgIdNum = Number(orgId);
   const startDate = new Date(start);
