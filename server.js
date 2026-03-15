@@ -2,6 +2,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
@@ -34,7 +36,43 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- MIDDLEWARE & STATIC ---
-app.use(cors());
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+    }
+  }
+}));
+
+// CORS: alleen eigen domein(en) toestaan
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(s => s.trim())
+  : ["http://localhost:3000"];
+app.use(cors({
+  origin: ALLOWED_ORIGINS,
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+}));
+
+// Rate limiting op auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuten
+  max: 30, // max 30 pogingen per 15 min
+  message: { error: "Te veel pogingen, probeer het later opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/login", authLimiter);
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/verify-org", authLimiter);
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -903,27 +941,25 @@ app.delete("/api/bookings/:id", async (req, res) => {
       return res.status(404).json({ error: "Reservering niet gevonden" });
     }
 
-    // Ownership check (alleen als er een token is)
-    if (tokenUser) {
-      const isOwner = booking.user_id === tokenUser.userId;
-      const isAdmin = tokenUser.role === "admin";
-      const isLegacy = booking.user_id === null;
-
-      // Legacy reserveringen (zonder user_id) kunnen alleen door admins verwijderd worden
-      // Eigen reserveringen kunnen altijd verwijderd worden
-      // Admins kunnen alles verwijderen
-      if (!isOwner && !isAdmin) {
-        return res.status(403).json({
-          error: "Je kunt alleen je eigen reserveringen verwijderen"
-        });
-      }
-      if (isLegacy && !isAdmin) {
-        return res.status(403).json({
-          error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
-        });
-      }
+    // Authenticatie verplicht
+    if (!tokenUser) {
+      return res.status(401).json({ error: "Je moet ingelogd zijn om te verwijderen" });
     }
-    // Geen token = oude flow (tijdelijk toegestaan voor backwards compatibility)
+
+    const isOwner = booking.user_id === tokenUser.userId;
+    const isAdmin = tokenUser.role === "admin";
+    const isLegacy = booking.user_id === null;
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: "Je kunt alleen je eigen reserveringen verwijderen"
+      });
+    }
+    if (isLegacy && !isAdmin) {
+      return res.status(403).json({
+        error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
+      });
+    }
 
     const { data, error } = await supabase
       .from("bookings")
@@ -1164,27 +1200,25 @@ app.delete("/api/meeting-bookings/:id", async (req, res) => {
       return res.status(404).json({ error: "Vergaderreservering niet gevonden" });
     }
 
-    // Ownership check (alleen als er een token is)
-    if (tokenUser) {
-      const isOwner = booking.user_id === tokenUser.userId;
-      const isAdmin = tokenUser.role === "admin";
-      const isLegacy = booking.user_id === null;
-
-      // Legacy reserveringen (zonder user_id) kunnen alleen door admins verwijderd worden
-      // Eigen reserveringen kunnen altijd verwijderd worden
-      // Admins kunnen alles verwijderen
-      if (!isOwner && !isAdmin) {
-        return res.status(403).json({
-          error: "Je kunt alleen je eigen reserveringen verwijderen"
-        });
-      }
-      if (isLegacy && !isAdmin) {
-        return res.status(403).json({
-          error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
-        });
-      }
+    // Authenticatie verplicht
+    if (!tokenUser) {
+      return res.status(401).json({ error: "Je moet ingelogd zijn om te verwijderen" });
     }
-    // Geen token = oude flow (tijdelijk toegestaan voor backwards compatibility)
+
+    const isOwner = booking.user_id === tokenUser.userId;
+    const isAdmin = tokenUser.role === "admin";
+    const isLegacy = booking.user_id === null;
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: "Je kunt alleen je eigen reserveringen verwijderen"
+      });
+    }
+    if (isLegacy && !isAdmin) {
+      return res.status(403).json({
+        error: "Oude reserveringen kunnen alleen door admins verwijderd worden"
+      });
+    }
 
     const { data, error } = await supabase
       .from("meeting_bookings")

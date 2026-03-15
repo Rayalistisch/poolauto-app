@@ -1494,6 +1494,14 @@
     return d;
   }
 
+  // XSS-bescherming: escape HTML in user data
+  function esc(str) {
+    if (!str) return "";
+    const d = document.createElement("div");
+    d.textContent = String(str);
+    return d.innerHTML;
+  }
+
   function addDays(date, days) {
     const d = new Date(date);
     d.setDate(d.getDate() + days);
@@ -1513,7 +1521,7 @@
       carMessageDiv.innerHTML = "";
       return;
     }
-    carMessageDiv.innerHTML = `<div class="message ${type || ""}">${text}</div>`;
+    carMessageDiv.innerHTML = `<div class="message ${type || ""}">${esc(text)}</div>`;
   }
 
   function showMeetingMessage(text, type) {
@@ -1521,7 +1529,7 @@
       meetingMessageDiv.innerHTML = "";
       return;
     }
-    meetingMessageDiv.innerHTML = `<div class="message ${type || ""}">${text}</div>`;
+    meetingMessageDiv.innerHTML = `<div class="message ${type || ""}">${esc(text)}</div>`;
   }
 
   function updateHeaderToday() {
@@ -1805,8 +1813,8 @@
         card.innerHTML = `
           <div class="car-header">
             <div>
-              <div><span class="plate">${car.license}</span></div>
-              <div class="car-name">${car.name}</div>
+              <div><span class="plate">${esc(car.license)}</span></div>
+              <div class="car-name">${esc(car.name)}</div>
             </div>
             <div class="car-status-pill ${car.status === "garage" ? "car-status-garage" : "car-status-ok"}">
               ${statusLabel}
@@ -2048,12 +2056,12 @@ function injectExtraCarsIntoBookingSelect() {
             card.innerHTML += `
               <div class="booking-item">
                 <div class="booking-item-body">
-                  <div class="booking-name">${b.userName}</div>
+                  <div class="booking-name">${esc(b.userName)}</div>
                   <div class="booking-meta">
-                    <span class="plate small">${plate}</span>
-                    ${carName ? `<span class="car-name-small">${carName}</span>` : ""}
+                    <span class="plate small">${esc(plate)}</span>
+                    ${carName ? `<span class="car-name-small">${esc(carName)}</span>` : ""}
                   </div>
-                  ${b.note ? `<div class="booking-note">${b.note}</div>` : ""}
+                  ${b.note ? `<div class="booking-note">${esc(b.note)}</div>` : ""}
                 </div>
                 <div class="booking-item-right">
                   <div class="booking-time">${range}</div>
@@ -2125,15 +2133,15 @@ function injectExtraCarsIntoBookingSelect() {
             const showDelete = canDeleteBooking(booking);
             const orgClass = booking.sourceOrgId ? `org-${booking.sourceOrgId}` : 'org-default';
             const orgBadge = booking.sourceOrgName
-              ? `<span class="org-badge ${orgClass}">${booking.sourceOrgName}</span>`
+              ? `<span class="org-badge ${orgClass}">${esc(booking.sourceOrgName)}</span>`
               : "";
             card.innerHTML += `
               <div class="booking-item">
                 <div class="booking-item-body">
-                  <div class="booking-name">${booking.title || 'Vergadering'} ${orgBadge}</div>
+                  <div class="booking-name">${esc(booking.title) || 'Vergadering'} ${orgBadge}</div>
                   <div class="booking-meta">
-                    <span class="room-badge">${roomName}</span>
-                    ${booking.organizer ? `<span class="car-name-small">${booking.organizer}</span>` : ""}
+                    <span class="room-badge">${esc(roomName)}</span>
+                    ${booking.organizer ? `<span class="car-name-small">${esc(booking.organizer)}</span>` : ""}
                   </div>
                 </div>
                 <div class="booking-item-right">
