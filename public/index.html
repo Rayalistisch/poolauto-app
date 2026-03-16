@@ -562,13 +562,18 @@
     background: none;
     color: var(--subtle);
     cursor: pointer;
-    padding: 3px;
+    padding: 8px;
     flex-shrink: 0;
-    font-size: 15px;
+    font-size: 18px;
     line-height: 1;
     border-radius: 5px;
     transition: color 0.1s, background 0.1s;
     margin-top: 1px;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .booking-delete-btn:hover { color: var(--danger); background: #fee2e2; }
   .day-card.highlight .booking-delete-btn { color: rgba(255,255,255,0.4); }
@@ -2182,35 +2187,47 @@ function injectExtraCarsIntoBookingSelect() {
   async function deleteBooking(id) {
     if (!confirm("Weet je zeker dat je deze reservering wilt verwijderen?")) return;
 
-    const res = await fetch(API_BASE + "/api/bookings/" + id, {
-      method: "DELETE",
-      headers: authHeaders()
-    });
+    try {
+      const res = await fetch(API_BASE + "/api/bookings/" + id, {
+        method: "DELETE",
+        headers: authHeaders()
+      });
 
-    if (!res.ok) {
-      alert("Verwijderen mislukt.");
-      return;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error || "Verwijderen mislukt.");
+        return;
+      }
+
+      await renderWeek();
+    } catch (err) {
+      console.error("deleteBooking error:", err);
+      alert("Verwijderen mislukt: " + err.message);
     }
-
-    await renderWeek();
   }
 
   window.deleteBooking = deleteBooking;
 
   async function deleteMeetingBooking(id) {
     if (!confirm("Weet je zeker dat je deze vergadering wilt verwijderen?")) return;
-    
-    const res = await fetch(API_BASE + "/api/meeting-bookings/" + id, {
-      method: "DELETE",
-      headers: authHeaders()
-    });
 
-    if (!res.ok) {
-      alert("Verwijderen mislukt.");
-      return;
+    try {
+      const res = await fetch(API_BASE + "/api/meeting-bookings/" + id, {
+        method: "DELETE",
+        headers: authHeaders()
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error || "Verwijderen mislukt.");
+        return;
+      }
+
+      await renderMeetingWeek();
+    } catch (err) {
+      console.error("deleteMeetingBooking error:", err);
+      alert("Verwijderen mislukt: " + err.message);
     }
-
-    await renderMeetingWeek();
   }
 
   window.deleteMeetingBooking = deleteMeetingBooking;
