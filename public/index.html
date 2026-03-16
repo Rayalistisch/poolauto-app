@@ -2089,7 +2089,7 @@ function injectExtraCarsIntoBookingSelect() {
                 </div>
                 <div class="booking-item-right">
                   <div class="booking-time">${range}</div>
-                  ${showDelete ? `<button class="booking-delete-btn" onclick="deleteBooking(${b.id})">×</button>` : ""}
+                  ${showDelete ? `<button class="booking-delete-btn" data-delete-booking="${b.id}">×</button>` : ""}
                 </div>
               </div>
             `;
@@ -2170,7 +2170,7 @@ function injectExtraCarsIntoBookingSelect() {
                 </div>
                 <div class="booking-item-right">
                   <div class="booking-time">${timeRange}</div>
-                  ${showDelete ? `<button class="booking-delete-btn" onclick="deleteMeetingBooking(${booking.id})">×</button>` : ""}
+                  ${showDelete ? `<button class="booking-delete-btn" data-delete-meeting="${booking.id}">×</button>` : ""}
                 </div>
               </div>
             `;
@@ -2231,6 +2231,24 @@ function injectExtraCarsIntoBookingSelect() {
   }
 
   window.deleteMeetingBooking = deleteMeetingBooking;
+
+  // Event delegation voor delete buttons (werkt betrouwbaarder dan inline onclick)
+  document.addEventListener("click", function(e) {
+    const btn = e.target.closest("[data-delete-booking]");
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteBooking(Number(btn.dataset.deleteBooking));
+      return;
+    }
+    const mbtn = e.target.closest("[data-delete-meeting]");
+    if (mbtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteMeetingBooking(Number(mbtn.dataset.deleteMeeting));
+      return;
+    }
+  });
 
   // -------- LOGIN / LOGOUT --------
 
