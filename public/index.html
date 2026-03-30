@@ -2262,7 +2262,11 @@ function injectExtraCarsIntoBookingSelect() {
     usersContainer.innerHTML = "<p style='color:var(--muted);padding:12px'>Laden…</p>";
     try {
       const res = await fetch(API_BASE + "/api/users", { headers: authHeaders() });
-      if (!res.ok) { usersContainer.innerHTML = "<p style='color:var(--danger);padding:12px'>Fout bij laden.</p>"; return; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        usersContainer.innerHTML = `<p style='color:var(--danger);padding:12px'>Fout (${res.status}): ${err.error || "onbekend"}</p>`;
+        return;
+      }
       const { users } = await res.json();
       if (!users.length) { usersContainer.innerHTML = "<p style='color:var(--muted);padding:12px'>Geen gebruikers gevonden.</p>"; return; }
       usersContainer.innerHTML = users.map(u => `
