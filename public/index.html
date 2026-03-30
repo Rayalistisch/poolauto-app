@@ -579,6 +579,19 @@
   .day-card.highlight .booking-delete-btn { color: rgba(255,255,255,0.4); }
   .day-card.highlight .booking-delete-btn:hover { color: #fff; background: rgba(0,0,0,0.2); }
 
+  /* ─── USER MANAGEMENT ────────────────────── */
+  .user-row { display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border-radius:var(--r-sm); padding:14px 16px;
+    box-shadow:var(--shadow-xs); gap:12px; }
+  .user-row-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .user-row-name { font-weight:600; font-size:15px; }
+  .user-row-email { font-size:12px; color:var(--muted); }
+  .user-row-role { font-size:11px; font-weight:600; text-transform:uppercase; color:var(--subtle); }
+  .user-delete-btn { border:none; background:none; color:var(--subtle); cursor:pointer;
+    font-size:22px; padding:6px 8px; border-radius:var(--r-xs); flex-shrink:0;
+    transition:color .15s, background .15s; }
+  .user-delete-btn:hover { color:var(--danger); background:#fee2e2; }
+
   /* ─── BADGES ─────────────────────────────── */
   .plate {
     display: inline-block;
@@ -1239,6 +1252,12 @@
           </p>
           <div id="carsContainer" class="car-list"></div>
         </section>
+
+        <!-- Gebruikersbeheer (admin only) -->
+        <section id="usersSection" class="hidden">
+          <div class="section-title">Gebruikersbeheer</div>
+          <div id="usersContainer" class="car-list"></div>
+        </section>
       </main>
 
       <!-- BOTTOM NAV -->
@@ -1254,6 +1273,10 @@
         <button id="tabCars" class="tab-btn" type="button">
           <span class="tab-icon material-symbols-rounded">garage</span>
           <span>Auto's</span>
+        </button>
+        <button id="tabUsers" class="tab-btn hidden" type="button">
+          <span class="tab-icon material-symbols-rounded">manage_accounts</span>
+          <span>Gebruikers</span>
         </button>
         <button id="tabAdd" class="tab-btn tab-btn-add" type="button">
           <div class="add-circle">
@@ -1439,10 +1462,13 @@
   const overviewSection = document.getElementById("overviewSection");
   const meetingSection = document.getElementById("meetingSection");
   const carsSection = document.getElementById("carsSection");
+  const usersSection = document.getElementById("usersSection");
+  const usersContainer = document.getElementById("usersContainer");
 
   const tabOverview = document.getElementById("tabOverview");
   const tabMeeting = document.getElementById("tabMeeting");
   const tabCars = document.getElementById("tabCars");
+  const tabUsers = document.getElementById("tabUsers");
   const tabAdd = document.getElementById("tabAdd");
 
   const carsContainer = document.getElementById("carsContainer");
@@ -2232,6 +2258,46 @@ function injectExtraCarsIntoBookingSelect() {
 
   window.deleteMeetingBooking = deleteMeetingBooking;
 
+  async function renderUsers() {
+    usersContainer.innerHTML = "<p style='color:var(--muted);padding:12px'>Laden…</p>";
+    try {
+      const res = await fetch(API_BASE + "/api/users", { headers: authHeaders() });
+      if (!res.ok) { usersContainer.innerHTML = "<p style='color:var(--danger);padding:12px'>Fout bij laden.</p>"; return; }
+      const { users } = await res.json();
+      if (!users.length) { usersContainer.innerHTML = "<p style='color:var(--muted);padding:12px'>Geen gebruikers gevonden.</p>"; return; }
+      usersContainer.innerHTML = users.map(u => `
+        <div class="user-row">
+          <div class="user-row-info">
+            <span class="user-row-name">${u.name || "—"}</span>
+            <span class="user-row-email">${u.email}</span>
+            <span class="user-row-role">${u.role}</span>
+          </div>
+          ${u.id !== currentUser.id
+            ? `<button class="user-delete-btn" data-delete-user="${u.id}" title="Verwijder gebruiker">×</button>`
+            : `<span style="font-size:12px;color:var(--subtle)">(jij)</span>`}
+        </div>`).join("");
+    } catch (err) {
+      console.error("renderUsers error:", err);
+      usersContainer.innerHTML = "<p style='color:var(--danger);padding:12px'>Fout bij laden.</p>";
+    }
+  }
+
+  async function deleteUser(id) {
+    if (!confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) return;
+    try {
+      const res = await fetch(API_BASE + "/api/users/" + id, { method: "DELETE", headers: authHeaders() });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        alert(b.error || "Verwijderen mislukt.");
+        return;
+      }
+      renderUsers();
+    } catch (err) {
+      console.error("deleteUser error:", err);
+      alert("Verbindingsfout.");
+    }
+  }
+
   // Event delegation voor delete buttons (werkt betrouwbaarder dan inline onclick)
   document.addEventListener("click", function(e) {
     const btn = e.target.closest("[data-delete-booking]");
@@ -2246,6 +2312,13 @@ function injectExtraCarsIntoBookingSelect() {
       e.preventDefault();
       e.stopPropagation();
       deleteMeetingBooking(Number(mbtn.dataset.deleteMeeting));
+      return;
+    }
+    const ubtn = e.target.closest("[data-delete-user]");
+    if (ubtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      deleteUser(Number(ubtn.dataset.deleteUser));
       return;
     }
   });
@@ -2600,18 +2673,22 @@ function injectExtraCarsIntoBookingSelect() {
   tabOverview.addEventListener("click", () => setActiveTab("overview"));
   tabMeeting.addEventListener("click", () => setActiveTab("meeting"));
   tabCars.addEventListener("click", () => setActiveTab("cars"));
+  tabUsers.addEventListener("click", () => setActiveTab("users"));
 
   function setActiveTab(tab) {
     overviewSection.classList.toggle("hidden", tab !== "overview");
     meetingSection.classList.toggle("hidden", tab !== "meeting");
     carsSection.classList.toggle("hidden", tab !== "cars");
+    usersSection.classList.toggle("hidden", tab !== "users");
 
     tabOverview.classList.toggle("active", tab === "overview");
     tabMeeting.classList.toggle("active", tab === "meeting");
     tabCars.classList.toggle("active", tab === "cars");
+    tabUsers.classList.toggle("active", tab === "users");
 
     if (tab === "cars") renderCars();
     if (tab === "meeting") renderMeetingWeek();
+    if (tab === "users") renderUsers();
   }
 
   prevWeekBtn.addEventListener("click", () => {
@@ -2745,6 +2822,7 @@ function injectExtraCarsIntoBookingSelect() {
     tabOverview.style.display = hasCars ? "" : "none";
     tabCars.style.display = hasCars ? "" : "none";
     tabMeeting.style.display = hasMeetings ? "" : "none";
+    tabUsers.classList.toggle("hidden", currentUser?.role !== "admin");
 
     // Extra auto's dropdown verbergen als geen auto-toegang
     const extraCarsWrap = document.getElementById("extraCarsDropdownWrap");

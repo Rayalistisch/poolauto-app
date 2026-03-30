@@ -1257,6 +1257,51 @@ app.delete("/api/meeting-bookings/:id", async (req, res) => {
   }
 });
 
+// ---- GEBRUIKERSBEHEER (admin only) ----
+
+app.get("/api/users", async (req, res) => {
+  const user = getUserFromToken(req);
+  if (!user || user.role !== "admin") {
+    return res.status(403).json({ error: "Alleen admins kunnen gebruikers inzien." });
+  }
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, name, email, role")
+      .eq("org_id", user.orgId)
+      .order("name", { ascending: true });
+    if (error) return res.status(500).json({ error: "Kon gebruikers niet ophalen." });
+    res.json({ users: data });
+  } catch (err) {
+    console.error("Serverfout GET /api/users:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  const user = getUserFromToken(req);
+  if (!user || user.role !== "admin") {
+    return res.status(403).json({ error: "Alleen admins kunnen gebruikers verwijderen." });
+  }
+  const targetId = Number(req.params.id);
+  if (targetId === user.userId) {
+    return res.status(400).json({ error: "Je kunt jezelf niet verwijderen." });
+  }
+  try {
+    const { data: target } = await supabase
+      .from("users").select("id").eq("id", targetId).eq("org_id", user.orgId).single();
+    if (!target) return res.status(404).json({ error: "Gebruiker niet gevonden in jouw organisatie." });
+
+    const { error } = await supabase
+      .from("users").delete().eq("id", targetId).eq("org_id", user.orgId);
+    if (error) return res.status(500).json({ error: "Kon gebruiker niet verwijderen." });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Serverfout DELETE /api/users/:id:", err);
+    res.status(500).json({ error: "Interne serverfout." });
+  }
+});
+
 // ---- START SERVER ----
 app.listen(PORT, () => {
   console.log(`✅ Poolauto app draait op http://localhost:${PORT}`);
